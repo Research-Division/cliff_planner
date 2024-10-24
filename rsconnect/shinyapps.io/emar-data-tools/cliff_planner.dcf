@@ -1,0 +1,9 @@
+name: cliff_planner
+title:
+username:
+account: emar-data-tools
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8846926
+bundleId: 9090362
+url: https://emar-data-tools.shinyapps.io/cliff_planner/
