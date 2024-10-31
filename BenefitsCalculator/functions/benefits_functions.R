@@ -577,7 +577,7 @@ function.ssiBenefit<-function(data){
 # Supplemental Nutrition Assistance Program (SNAP)----
 
 function.snapBenefit<-function(data){
-
+  test.snap <<- data # data <- test.snap
   # Add most recent benefit rules we have to the current year if we do not have most up-to-date rules
   years<-unique(data$ruleYear) # years in data set
   yearsinexpdata<- unique(snapData$ruleYear) # rule years in benefit data
@@ -608,10 +608,7 @@ function.snapBenefit<-function(data){
     # Step I: Calculate Earned Income Deduction
     data$EarnedIncomeDeduction<-0.2*data$income #earned income only
 
-    # Step II: Calculate adjusted income
-    data$adjustedincome<-rowMaxs(cbind(data$income.gross-data$EarnedIncomeDeduction-12*data$StandardDeduction-data$netexp.childcare,0),na.rm=TRUE)
-
-    # Step III: Calculate Utility Deductions
+    # Step II: Calculate Utility Deductions
     data$UtilityDeduction<-0
     subset<-which((data$netexp.utilities>0 | data$HeatandEatState=="Yes") & data$HCSUA=="Mandatory") #liheap >0 should be in list of "|" statements runs after this program so will always be 0
     data$UtilityDeduction[subset]<-12*data$HCSUAValue[subset]
@@ -620,7 +617,7 @@ function.snapBenefit<-function(data){
     data$UtilityDeduction[subset]<-rowMaxs(cbind(12*data$HCSUAValue[subset],data$netexp.utilities[subset]))
 
 
-    # # Step V: Calculate Medical Expense Deduction (those on SSI,SSDI, and elderly can deduct their medical expenses)
+    # # Step III: Calculate Medical Expense Deduction (those on SSI,SSDI, and elderly can deduct their medical expenses)
     data$MedicalDeduction.person1<-case_when( (data$value.ssiAdlt1>0 | data$ssdiPIA1>0 | data$agePerson1 >60) ~ data$oop.add_for_elderlyordisabled
                                              , TRUE ~ 0)
     data$MedicalDeduction.person2<-case_when( (data$value.ssiAdlt2>0 | data$ssdiPIA2>0 | data$agePerson2 >60) ~ data$oop.add_for_elderlyordisabled
@@ -651,11 +648,17 @@ function.snapBenefit<-function(data){
       mutate(MedicalDeduction = MedicalDeduction.person1+MedicalDeduction.person2+MedicalDeduction.person3+MedicalDeduction.person4+MedicalDeduction.person5+MedicalDeduction.person6+MedicalDeduction.person7+MedicalDeduction.person8+MedicalDeduction.person9+MedicalDeduction.person10+MedicalDeduction.person11+MedicalDeduction.person12)
 
     data$MedicalDeduction<-rowMaxs(cbind(data$MedicalDeduction-data$MedicalExpenseDeductionFloor*12,0)) # Floor
-
-    # Step IV: Calculate Net Income
-    data$netincome<-rowMaxs(cbind(0,data$adjustedincome-rowMins(cbind(data$netexp.rentormortgage + data$UtilityDeduction + data$MedicalDeduction - 0.5*data$adjustedincome,data$MaxShelterDeduction*12))))
-
-    # Step V-VI: Determine eligibility and calculate SNAP value
+    
+    # Step IV: Calculate adjusted income (All deductions except housing)
+    data$adjustedincome<-rowMaxs(cbind(data$income.gross-(data$EarnedIncomeDeduction +(12*data$StandardDeduction) + data$netexp.childcare + data$MedicalDeduction),0),na.rm=TRUE)
+    
+    
+    # Step V: Calculate Net Income (Deduct housing expenses) 
+    # There is a special SNAP Rule that states: For a household with an elderly or disabled member, all shelter costs over half of the household's income may be deducted. 
+    data$netincome[data$elderly_count == 0 & data$disabled_count == 0]<-rowMaxs(cbind(0,(data$adjustedincome[data$elderly_count == 0 & data$disabled_count == 0])-rowMins(cbind(rowMaxs(cbind((data$netexp.rentormortgage[data$elderly_count == 0 & data$disabled_count == 0] + data$UtilityDeduction[data$elderly_count == 0 & data$disabled_count == 0]) - 0.5*data$adjustedincome[data$elderly_count == 0 & data$disabled_count == 0],0)),data$MaxShelterDeduction[data$elderly_count == 0 & data$disabled_count == 0]*12))))
+    data$netincome[data$elderly_count != 0 | data$disabled_count != 0] <- rowMaxs(cbind(0,data$adjustedincome[data$elderly_count != 0 | data$disabled_count != 0] - (rowMaxs(cbind(((data$netexp.rentormortgage[data$elderly_count != 0 | data$disabled_count != 0] + data$UtilityDeduction[data$elderly_count != 0 | data$disabled_count != 0])-0.5*data$adjustedincome[data$elderly_count != 0 | data$disabled_count != 0]),0)))))
+     
+    # Step VI-VII: Determine eligibility and calculate SNAP value
 
     #adjust for NY special rule that says those with dependent care expenses have a gross threhsold of 200% of FPL threshold ; others have 150%FPL)
     data$GrossIncomeEligibility[data$stateFIPS==36 & data$netexp.childcare >0]<- data$FPL[data$stateFIPS==36 & data$netexp.childcare >0]*2
@@ -676,8 +679,11 @@ function.snapBenefit<-function(data){
 
     data$not_categ_elig_tanf<-data$value.tanf==0 # if family doesn't receive TANF
 
-    # Determine if the family FAILS income tests
-    data$fail_grossIncomeTest<-data$income.gross>data$GrossIncomeEligibility & (data$not_categ_elig_tanf==TRUE & data$not_categ_elig_ssi==TRUE)
+    # Determine if the family FAILS income test
+    #Gross income eligibility for elderly and disable individuals is two times FPL
+    data$fail_grossIncomeTest[data$elderly_count == 0 & data$disabled_count == 0]<-data$income.gross[data$elderly_count == 0 & data$disabled_count == 0]>data$GrossIncomeEligibility[data$elderly_count == 0 & data$disabled_count == 0] & (data$not_categ_elig_tanf==TRUE & data$not_categ_elig_ssi==TRUE)
+    data$fail_grossIncomeTest[data$elderly_count != 0 | data$disabled_count != 0]<-data$income.gross[data$elderly_count != 0 | data$disabled_count != 0]>2*data$FPL[data$elderly_count != 0 | data$disabled_count != 0] & (data$not_categ_elig_tanf==TRUE & data$not_categ_elig_ssi==TRUE) 
+    
     #some states waive net income tests
     data$fail_netIncomeTest_nonelddis<-(data$disabled_count==0 & data$elderly_count==0) & data$netincome>data$NetIncomeEligibility_nonelddis
     data$fail_netIncomeTest_Elder_Dis<-(data$disabled_count>0 | data$elderly_count>0) & data$netincome>data$NetIncomeEligibility_Elder_Dis
@@ -2101,7 +2107,7 @@ function.fedinctax<-function(data
 
     data$value.fedinctax<-data$value.tax1+data$value.tax2+data$value.tax3+data$value.tax4+data$value.tax5+data$value.tax6+data$value.tax7
     data$value.fedinctax<-round(data$value.fedinctax,0)
-#browser()
+
     return(data$value.fedinctax)
 
   }
