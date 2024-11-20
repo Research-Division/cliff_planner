@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$error_frsp <- renderText({
-    "Warning: Section 8 and FRSP are mutually exclusive programs. Please select one program or the other, not both."
+    "Warning: Section 8 cannot be chosen with either the FRSP or CareerMAP programs. Please select one program."
   })
 
   output$error_family_age <- renderText({
@@ -1417,39 +1417,68 @@ shinyServer(function(input, output, session) {
       #---------------------------------------------------------------------------
       # Public Assistance Programs
       #---------------------------------------------------------------------------
+      benefitslist<-c()
       #programs.healthcare<-isolate(as.logical(input$healthcare))
       programs.medicaid_adults<-isolate(as.logical(input$medicaid_adults))
+      if (programs.medicaid_adults)
+        benefitslist<-c(benefitslist,"Medicaid for Adults")
       programs.medicaid_child<-isolate(as.logical(input$medicaid_child))
+      if (programs.medicaid_child)
+        benefitslist<-c(benefitslist,"Medicaid for Children/CHIP")
       programs.aca<-isolate(as.logical(input$aca))
+      if (programs.aca)
+        benefitslist<-c(benefitslist,"Health Insurance Marketplace Subsidy")
       programs.snap<-isolate(as.logical(input$snap))
+      if (programs.snap)
+        benefitslist<-c(benefitslist,"Supplemental Nutrition Assistance Program (SNAP)")
       programs.schoolMeals<-isolate(as.logical(input$schoolMeals))
+      if (programs.schoolMeals)
+        benefitslist<-c(benefitslist,"Free or Reduced Price School Meals")
       programs.wic<-isolate(as.logical(input$wic))
+      if (programs.wic)
+        benefitslist<-c(benefitslist,"Women, Infants and Children Nutrition Program (WIC)")
       programs.ccdf<-isolate(as.logical(input$ccdf))
+      if (programs.ccdf)
+        benefitslist<-c(benefitslist,"Child Care Subsidy (CCDF)")
       programs.ccdf_cont<-isolate(as.logical(input$ccdf_cont))
       programs.fates<-isolate(as.logical(input$fates))
+      if (programs.fates)
+        benefitslist<-c(benefitslist,"FATES")
       programs.head_start<-isolate(as.logical(input$head_start))
+      if (programs.head_start)
+        benefitslist<-c(benefitslist,"Head Start")
       programs.prek<-isolate(as.logical(input$prek))
+      if (programs.prek)
+        benefitslist<-c(benefitslist,"State-Funded Pre-Kindergarten")
       programs.eitc<-isolate(as.logical(input$eitc))
+      if (programs.eitc)
+        benefitslist<-c(benefitslist,"Earned Income Tax Credit (EITC)")
       programs.ctc<-isolate(as.logical(input$ctc))
+      if (programs.ctc)
+        benefitslist<-c(benefitslist,"Child Tax Credit (CTC)")
       programs.cdctc<-isolate(as.logical(input$cdctc))
+      if (programs.cdctc)
+        benefitslist<-c(benefitslist,"Child and Dependent Care Tax Credit (CDCTC)")
       programs.section8<-isolate(as.logical(input$section8))
       programs.section8_cont<-isolate(as.logical(input$section8_cont))
       programs.tanf<-isolate(as.logical(input$tanf))
-      programs.rap<-isolate(as.logical(input$rap))
+      if (programs.tanf)
+        benefitslist<-c(benefitslist,"Temporary Assistance for Needy Families (TANF)")
     #  if(state != 'AL'){
       programs.ssdi<-isolate(as.logical(input$ssdi))
+      if (programs.ssdi)
+        benefitslist<-c(benefitslist,"Social Security Disability Insurance (SSDI)")
       programs.ssi<-isolate(as.logical(input$ssi))
+      if (programs.ssi)
+        benefitslist<-c(benefitslist,"Supplemental Security Income (SSI)")
     #  }else{
      #   programs.ssdi <- FALSE
     #    programs.ssi <- FALSE
     #  }
-
-
-
-
      
       frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (partitipants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
       careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (partitipants pay 30% of their income towards rent)
+      programs.rap <- isolate(as.logical(input$rap))
       programs.frsp<<-FALSE
       programs.careermap<<-FALSE
 
@@ -1488,7 +1517,15 @@ shinyServer(function(input, output, session) {
         programs.rap <- FALSE
       }
 
-
+      if (programs.section8)
+        benefitslist<-c(benefitslist,"Section 8 Housing Voucher")
+      else if (programs.rap)
+        benefitslist<-c(benefitslist,"RAP")
+      else if (careerMap)
+        benefitslist<-c(benefitslist,"Career MAP - Housing","Career MAP Income Support")
+      else if (frsp)
+        benefitslist<-c(benefitslist,"FRSP")
+      
       # Initial/Continuous Eligibility
       contelig.headstart <- isolate(as.logical(input$headstart_cont))
       contelig.earlyheadstart <- isolate(as.logical(input$earlyheadstart_cont))
@@ -3274,7 +3311,7 @@ shinyServer(function(input, output, session) {
           need(inputs$xyz==0, " ")
         )
 
-        table.Transfers(data_1, data_2, data_init, selected=inputs$career_plan, horizon=inputs$horizon, exp_type,inputs)
+        table.Transfers(data_1, data_2, data_init, selected=inputs$career_plan, horizon=inputs$horizon, exp_type, inputs, benefitslist)
       }, rownames = TRUE, colnames = TRUE, bordered = TRUE, width = '80%', spacing = "l", align = 'l', digits = 0)
 
       #-------------------------------
@@ -3306,7 +3343,7 @@ shinyServer(function(input, output, session) {
           need(inputs$xyz==0, " ")
         )
 
-        transfers.budget.values(data_1, data_2, data_init, selected=inputs$career_plan, horizon=inputs$horizon, exp_type,inputs)
+        transfers.budget.values(data_1, data_2, data_init, selected=inputs$career_plan, horizon=inputs$horizon, exp_type, inputs, benefitslist)
       }
       #, width = 837, height = 477
       )

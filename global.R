@@ -1544,7 +1544,7 @@ net.res.budget.values <- function(data1,data2, dataInit, selected, horizon, exp_
 xxxxx <<- 13
 #-----------------------------------------------------------------------
 # Budgeting - Public Assistance Breakdown
-transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, exp_type,inputs){
+transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, exp_type, inputs, benefitslist){
   
   
   ########################
@@ -1642,37 +1642,46 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   d<-d[d$agePerson1<=maxage,]
   d$value.assistance.other <- d$value.assistance.other + d$value.assistance.tax.other
   
-  d2<-subset(d, select = c("total.transfers"))
-  d <- subset(d, select = c("agePerson1", "year.index", "CareerPath"
-                            , "value.medicaid.adult", "value.medicaid.child",  "value.aca"
-                            , "value.schoolmeals", "value.snap", "value.wic", "value.tanf"
-                            , "value.section8", "value.liheap"
-                            , "value.CCDF", "value.FATES","value.HeadStart", "value.earlyHeadStart", "value.PreK"
-                            , "value.cdctc", "value.eitc", "value.ctc", "value.ssdi", "value.ssi" ,"value.assistance.other", "value.hhf","c"))
-
-  
+  ## Rename Factors
   names(d)[names(d)=="value.medicaid.adult"] <- "Medicaid for Adults"
   names(d)[names(d)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
+  names(d)[names(d)=="value.snap"] <- "Supplemental Nutrition Assistance Program (SNAP)"
+  names(d)[names(d)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
+  names(d)[names(d)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
+  names(d)[names(d)=="value.section8"] <- "Section 8 Housing Voucher"
+  names(d)[names(d)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
   names(d)[names(d)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
-  names(d)[names(d)=="value.CCDF"] <- "CCDF"
-  names(d)[names(d)=="value.FATES"] <- "FATES"
+  names(d)[names(d)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
+  names(d)[names(d)=="value.ctc"] <- "Child Tax Credit (CTC)"
+  names(d)[names(d)=="value.schoolmeals"] <- "Subsidized School Meals"
+  #names(d)[names(d)=="value.liheap"] <- "LIHEAP"
   names(d)[names(d)=="value.HeadStart"] <- "Head Start"
-  names(d)[names(d)=="value.earlyHeadStart"] <- "Early Head Start"
-  names(d)[names(d)=="value.PreK"] <- "PreK"
-  names(d)[names(d)=="value.section8"] <- "Housing Voucher"
-  names(d)[names(d)=="value.liheap"] <- "LIHEAP"
-  names(d)[names(d)=="value.tanf"] <- "TANF"
-  names(d)[names(d)=="value.wic"] <- "WIC"
-  names(d)[names(d)=="value.snap"] <- "SNAP"
-  names(d)[names(d)=="value.schoolmeals"] <- "Free or Reduced Price School Meals"
-  names(d)[names(d)=="value.cdctc"] <- "CDCTC"
-  names(d)[names(d)=="value.eitc"] <- "EITC"
-  names(d)[names(d)=="value.ctc"] <- "CTC"
-  names(d)[names(d)=="value.ssdi"] <- "SSDI"
-  names(d)[names(d)=="value.ssi"] <- "SSI"
+  #names(d)[names(d)=="value.earlyHeadStart"] <- "Early Head Start"
+  names(d)[names(d)=="value.PreK"] <- "State-Funded Pre-Kindergarten"
+  names(d)[names(d)=="tax.income.fed"] <- "Federal Income Tax"
+  names(d)[names(d)=="tax.income.state"] <- "State Income Tax"
+  names(d)[names(d)=="tax.FICA"] <- "FICA Tax"
+  names(d)[names(d)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
+  #names(d)[names(d)=="value.FATES"] <- "FATES"
+  names(d)[names(d)=="value.ssi"] <- "Supplemental Security Income (SSI)"
+  names(d)[names(d)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
+  names(d)[names(d)=="value.hhf"] <- "Career MAP Income Support"
   names(d)[names(d)=="value.assistance.other"] <- "Wraparound Support"
-  names(d)[names(d)=="value.hhf"] <- "Cash Compensation for the Benefits Loss"
   
+  if ("Career MAP - Housing" %in% benefitslist){
+    names(d)[names(d)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
+  }
+  else if ("FRSP" %in% benefitslist){
+    names(d)[names(d)=="Section 8 Housing Voucher"] <- "FRSP"
+  } 
+  else if ("RAP" %in% benefitslist){
+    names(d)[names(d)=="Section 8 Housing Voucher"] <- "RAP"
+  }      
+  
+  d2<-subset(d, select = c("total.transfers"))
+  d <- subset(d, select = c("agePerson1", "year.index", "CareerPath",
+                            benefitslist, "c"))
+
   
   benefits.decomp <- melt(d, id.vars=c("agePerson1", "year.index", "CareerPath","c"),
                           variable.name="Program",value.name="Transfer")
@@ -1687,12 +1696,31 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   ########################
   ## define colors
   #117733
-  benefit_colors <- c("Medicaid for Adults"="#332288", "Medicaid for Children/CHIP"="#E69F00", "Health Insurance Marketplace Subsidy"="#117733", "TANF"="#0072B2",
-                      "Housing Voucher"="#CC79A7", "LIHEAP"="#CC6677", "SNAP"="#D55E00", "WIC"="#AA4499", "Free or Reduced Price School Meals"="#999933", 
-                      "CCDF"="#882255", "FATES"="medium blue", 
-                      "Head Start" = "#88CCEE", "Early Head Start" = "light green", "PreK" = "black", "EITC"="#888888", "CTC"="#44AA99", "CDCTC"="#F0E442",
-                      "Wraparound Support"="#661100","SSI"="red3","SSDI"="turquoise4", "Cash Compensation for the Benefits Loss"="#deb887")
+  benefit_colors <- c("Medicaid for Adults"="#332288", "Medicaid for Children/CHIP"="#E69F00", "Health Insurance Marketplace Subsidy"="#117733", 
+                      "Temporary Assistance for Needy Families (TANF)"="#0072B2", #"Section 8 Housing Voucher"="#CC79A7", "LIHEAP"="#CC6677", 
+                      "Supplemental Nutrition Assistance Program (SNAP)"="#D55E00", "Women, Infants and Children Nutrition Program (WIC)"="#AA4499", 
+                      "Free or Reduced Price School Meals"="#999933", "Child Care Subsidy (CCDF)"="#882255", "FATES"="medium blue", 
+                      "Head Start" = "#88CCEE", "Early Head Start" = "light green", "State-Funded Pre-Kindergarten" = "black", 
+                      "Earned Income Tax Credit (EITC)"="#888888", "Child Tax Credit (CTC)"="#44AA99", 
+                      "Child and Dependent Care Tax Credit (CDCTC)"="#F0E442", "Wraparound Support"="#661100",
+                      "Supplemental Security Income (SSI)"="red3","Social Security Disability Insurance (SSDI)"="turquoise4", 
+                      "Career MAP Income Support"="#deb887")
   
+  if ("Career MAP - Housing" %in% benefitslist){
+    names(d)[names(d)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
+    benefit_colors <- c(benefit_colors,"Career MAP - Housing"="#CC79A7")
+  }
+  else if ("FRSP" %in% benefitslist){
+    names(d)[names(d)=="Section 8 Housing Voucher"] <- "FRSP"
+    benefit_colors <- c(benefit_colors,"FRSP"="#CC79A7")
+  } 
+  else if ("RAP" %in% benefitslist){
+    names(d)[names(d)=="Section 8 Housing Voucher"] <- "RAP"
+    benefit_colors <- c(benefit_colors,"RAP"="#CC79A7")
+  }        
+  else {
+    benefit_colors <- c(benefit_colors,"Section 8 Housing Voucher"="#CC79A7")
+  }
   
   
   ####################
@@ -4675,7 +4703,7 @@ xxxxx <<- 25
 
 #-----------------------------------------------------------------------
 # Budgeting - Public Assistance Breakdown Table
-table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, inputs){
+table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, inputs, benefitslist){
        
   ########################
   # PRE-PROCESSING
@@ -4751,7 +4779,8 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   
   dataInit$value.assistance.other <- dataInit$value.assistance.other + dataInit$value.assistance.tax.other
   data$value.assistance.other <- data$value.assistance.other + data$value.assistance.tax.other
-  
+  if ((dataInit$value.assistance.other[1] > 0) | (sum(data$value.assistance.other) > 0))
+    benefitslist <- c(benefitslist,"Wraparound Support")
   
   # Error 2: Career option was not specified
   validate(
@@ -4767,1344 +4796,87 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   # based on horizon, combine cols 1-2:5 together
   # apply colnames 
   
-  table<-data.frame(matrix(0,nrow=19, ncol=horizon+1))
+  ## Rename Factors
+  names(data)[names(data)=="value.medicaid.adult"] <- "Medicaid for Adults"
+  names(data)[names(data)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
+  names(data)[names(data)=="value.snap"] <- "Supplemental Nutrition Assistance Program (SNAP)"
+  names(data)[names(data)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
+  names(data)[names(data)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
+  names(data)[names(data)=="value.section8"] <- "Section 8 Housing Voucher"
+  names(data)[names(data)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  names(data)[names(data)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
+  names(data)[names(data)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
+  names(data)[names(data)=="value.ctc"] <- "Child Tax Credit (CTC)"
+  names(data)[names(data)=="value.schoolmeals"] <- "Free or Reduced Price School Meals"
+  #names(data)[names(data)=="value.liheap"] <- "LIHEAP"
+  names(data)[names(data)=="value.HeadStart"] <- "Head Start"
+  #names(data)[names(data)=="value.earlyHeadStart"] <- "Early Head Start"
+  names(data)[names(data)=="value.PreK"] <- "State-Funded Pre-Kindergarten"
+  names(data)[names(data)=="tax.income.fed"] <- "Federal Income Tax"
+  names(data)[names(data)=="tax.income.state"] <- "State Income Tax"
+  names(data)[names(data)=="tax.FICA"] <- "FICA Tax"
+  names(data)[names(data)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
+  #names(data)[names(data)=="value.FATES"] <- "FATES"
+  names(data)[names(data)=="value.ssi"] <- "Supplemental Security Income (SSI)"
+  names(data)[names(data)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
+  names(data)[names(data)=="value.hhf"] <- "Career MAP Income Support"
+  names(data)[names(data)=="value.assistance.other"] <- "Wraparound Support"
   
-  rownames(table)<-c("Medicaid for Adults", "Medicaid for Children/CHIP", "Premium Subsidy"
-                     , "Childcare Subsidy", "Head Start", "PreK", "Housing Voucher", "TANF"
-                     ,"SNAP", "WIC", "Subsidized School Meals", "CDCTC", "EITC", "CTC", "Wraparound Support", "FATES", "SSDI", "SSI", "Cash Compensation for the Benefits Loss" )
-  
-  
-  ### HORIZON BUDGET
-  
-  
-    if(horizon==1){
-    colnames(table)<-c("Current Job", "New Path: Year 1")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
+  names(dataInit)[names(dataInit)=="value.medicaid.adult"] <- "Medicaid for Adults"
+  names(dataInit)[names(dataInit)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
+  names(dataInit)[names(dataInit)=="value.snap"] <- "Supplemental Nutrition Assistance Program (SNAP)"
+  names(dataInit)[names(dataInit)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
+  names(dataInit)[names(dataInit)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
+  names(dataInit)[names(dataInit)=="value.section8"] <- "Section 8 Housing Voucher"
+  names(dataInit)[names(dataInit)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  names(dataInit)[names(dataInit)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
+  names(dataInit)[names(dataInit)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
+  names(dataInit)[names(dataInit)=="value.ctc"] <- "Child Tax Credit (CTC)"
+  names(dataInit)[names(dataInit)=="value.schoolmeals"] <- "Free or Reduced Price School Meals"
+  #names(dataInit)[names(dataInit)=="value.liheap"] <- "LIHEAP"
+  names(dataInit)[names(dataInit)=="value.HeadStart"] <- "Head Start"
+  #names(dataInit)[names(dataInit)=="value.earlyHeadStart"] <- "Early Head Start"
+  names(dataInit)[names(dataInit)=="value.PreK"] <- "State-Funded Pre-Kindergarten"
+  names(dataInit)[names(dataInit)=="tax.income.fed"] <- "Federal Income Tax"
+  names(dataInit)[names(dataInit)=="tax.income.state"] <- "State Income Tax"
+  names(dataInit)[names(dataInit)=="tax.FICA"] <- "FICA Tax"
+  names(dataInit)[names(dataInit)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
+  #names(dataInit)[names(dataInit)=="value.FATES"] <- "FATES"
+  names(dataInit)[names(dataInit)=="value.ssi"] <- "Supplemental Security Income (SSI)"
+  names(dataInit)[names(dataInit)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
+  names(dataInit)[names(dataInit)=="value.hhf"] <- "Career MAP Income Support"
+  names(dataInit)[names(dataInit)=="value.assistance.other"] <- "Wraparound Support"
+ 
+  if ("Career MAP - Housing" %in% benefitslist){
+    names(data)[names(data)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
+    names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
+  }
+  else if ("FRSP" %in% benefitslist){
+    names(data)[names(data)=="Section 8 Housing Voucher"] <- "FRSP"
+    names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "FRSP"
+  } 
+  else if ("RAP" %in% benefitslist){
+    names(data)[names(data)=="Section 8 Housing Voucher"] <- "RAP"
+    names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "RAP"
+  }      
 
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
+
+  table<-data.frame(matrix(0, nrow=length(benefitslist), ncol=horizon+1))
+  
+  rownames(table) <- benefitslist
+  colnames(table)[1] <- "Current Job"
+  colnames(table)[2] <- "New Path: Year 1"
+  for (j in 2:horizon){
+    colnames(table)[j+1] <- paste("Year", j)
   }
   
-  if(horizon==2){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    }
-  
-  if(horizon==3){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    }
-  
-  if(horizon==4){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-  }
-  
-  if(horizon==5){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4", "Year 5")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-    
-    table[1,6]<-data$value.medicaid.adult[data$Year==current_year+4]
-    table[2,6]<-data$value.medicaid.child[data$Year==current_year+4]
-    table[3,6]<-data$value.aca[data$Year==current_year+4]
-    table[4,6]<-data$value.CCDF[data$Year==current_year+4]
-    table[5,6]<-data$value.HeadStart[data$Year==current_year+4]
-    table[6,6]<-data$value.PreK[data$Year==current_year+4]
-    table[7,6]<-data$value.section8[data$Year==current_year+4]
-    table[8,6]<-data$value.tanf[data$Year==current_year+4]
-    table[9,6]<-data$value.snap[data$Year==current_year+4]
-    table[10,6]<-data$value.wic[data$Year==current_year+4]
-    table[11,6]<-data$value.schoolmeals[data$Year==current_year+4]
-    table[12,6]<-data$value.cdctc[data$Year==current_year+4]
-    table[13,6]<-data$value.eitc[data$Year==current_year+4]
-    table[14,6]<-data$value.ctc[data$Year==current_year+4]
-    table[15,6]<-data$value.assistance.other[data$Year==current_year+4]
-    table[16,6]<-data$value.FATES[data$Year==current_year+4]
-    table[17,6]<-data$value.ssdi[data$Year==current_year+4]
-    table[18,6]<-data$value.ssi[data$Year==current_year+4]
-    table[19,6]<-data$value.hhf[data$Year==current_year+4]
-  }
-
-  if(horizon==6){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-    
-    table[1,6]<-data$value.medicaid.adult[data$Year==current_year+4]
-    table[2,6]<-data$value.medicaid.child[data$Year==current_year+4]
-    table[3,6]<-data$value.aca[data$Year==current_year+4]
-    table[4,6]<-data$value.CCDF[data$Year==current_year+4]
-    table[5,6]<-data$value.HeadStart[data$Year==current_year+4]
-    table[6,6]<-data$value.PreK[data$Year==current_year+4]
-    table[7,6]<-data$value.section8[data$Year==current_year+4]
-    table[8,6]<-data$value.tanf[data$Year==current_year+4]
-    table[9,6]<-data$value.snap[data$Year==current_year+4]
-    table[10,6]<-data$value.wic[data$Year==current_year+4]
-    table[11,6]<-data$value.schoolmeals[data$Year==current_year+4]
-    table[12,6]<-data$value.cdctc[data$Year==current_year+4]
-    table[13,6]<-data$value.eitc[data$Year==current_year+4]
-    table[14,6]<-data$value.ctc[data$Year==current_year+4]
-    table[15,6]<-data$value.assistance.other[data$Year==current_year+4]
-    table[16,6]<-data$value.FATES[data$Year==current_year+4]
-    table[17,6]<-data$value.ssdi[data$Year==current_year+4]
-    table[18,6]<-data$value.ssi[data$Year==current_year+4]
-    table[19,6]<-data$value.hhf[data$Year==current_year+4]
-    
-    table[1,7]<-data$value.medicaid.adult[data$Year==current_year+5]
-    table[2,7]<-data$value.medicaid.child[data$Year==current_year+5]
-    table[3,7]<-data$value.aca[data$Year==current_year+5]
-    table[4,7]<-data$value.CCDF[data$Year==current_year+5]
-    table[5,7]<-data$value.HeadStart[data$Year==current_year+5]
-    table[6,7]<-data$value.PreK[data$Year==current_year+5]
-    table[7,7]<-data$value.section8[data$Year==current_year+5]
-    table[8,7]<-data$value.tanf[data$Year==current_year+5]
-    table[9,7]<-data$value.snap[data$Year==current_year+5]
-    table[10,7]<-data$value.wic[data$Year==current_year+5]
-    table[11,7]<-data$value.schoolmeals[data$Year==current_year+5]
-    table[12,7]<-data$value.cdctc[data$Year==current_year+5]
-    table[13,7]<-data$value.eitc[data$Year==current_year+5]
-    table[14,7]<-data$value.ctc[data$Year==current_year+5]
-    table[15,7]<-data$value.assistance.other[data$Year==current_year+5]
-    table[16,7]<-data$value.FATES[data$Year==current_year+5]
-    table[17,7]<-data$value.ssdi[data$Year==current_year+5]
-    table[18,7]<-data$value.ssi[data$Year==current_year+5]
-    table[19,7]<-data$value.hhf[data$Year==current_year+5]
-  }
-
-  if(horizon==7){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-    
-    table[1,6]<-data$value.medicaid.adult[data$Year==current_year+4]
-    table[2,6]<-data$value.medicaid.child[data$Year==current_year+4]
-    table[3,6]<-data$value.aca[data$Year==current_year+4]
-    table[4,6]<-data$value.CCDF[data$Year==current_year+4]
-    table[5,6]<-data$value.HeadStart[data$Year==current_year+4]
-    table[6,6]<-data$value.PreK[data$Year==current_year+4]
-    table[7,6]<-data$value.section8[data$Year==current_year+4]
-    table[8,6]<-data$value.tanf[data$Year==current_year+4]
-    table[9,6]<-data$value.snap[data$Year==current_year+4]
-    table[10,6]<-data$value.wic[data$Year==current_year+4]
-    table[11,6]<-data$value.schoolmeals[data$Year==current_year+4]
-    table[12,6]<-data$value.cdctc[data$Year==current_year+4]
-    table[13,6]<-data$value.eitc[data$Year==current_year+4]
-    table[14,6]<-data$value.ctc[data$Year==current_year+4]
-    table[15,6]<-data$value.assistance.other[data$Year==current_year+4]
-    table[16,6]<-data$value.FATES[data$Year==current_year+4]
-    table[17,6]<-data$value.ssdi[data$Year==current_year+4]
-    table[18,6]<-data$value.ssi[data$Year==current_year+4]
-    table[19,6]<-data$value.hhf[data$Year==current_year+4]
-    
-    table[1,7]<-data$value.medicaid.adult[data$Year==current_year+5]
-    table[2,7]<-data$value.medicaid.child[data$Year==current_year+5]
-    table[3,7]<-data$value.aca[data$Year==current_year+5]
-    table[4,7]<-data$value.CCDF[data$Year==current_year+5]
-    table[5,7]<-data$value.HeadStart[data$Year==current_year+5]
-    table[6,7]<-data$value.PreK[data$Year==current_year+5]
-    table[7,7]<-data$value.section8[data$Year==current_year+5]
-    table[8,7]<-data$value.tanf[data$Year==current_year+5]
-    table[9,7]<-data$value.snap[data$Year==current_year+5]
-    table[10,7]<-data$value.wic[data$Year==current_year+5]
-    table[11,7]<-data$value.schoolmeals[data$Year==current_year+5]
-    table[12,7]<-data$value.cdctc[data$Year==current_year+5]
-    table[13,7]<-data$value.eitc[data$Year==current_year+5]
-    table[14,7]<-data$value.ctc[data$Year==current_year+5]
-    table[15,7]<-data$value.assistance.other[data$Year==current_year+5]
-    table[16,7]<-data$value.FATES[data$Year==current_year+5]
-    table[17,7]<-data$value.ssdi[data$Year==current_year+5]
-    table[18,7]<-data$value.ssi[data$Year==current_year+5]
-    table[19,7]<-data$value.hhf[data$Year==current_year+5]
-    
-    table[1,8]<-data$value.medicaid.adult[data$Year==current_year+6]
-    table[2,8]<-data$value.medicaid.child[data$Year==current_year+6]
-    table[3,8]<-data$value.aca[data$Year==current_year+6]
-    table[4,8]<-data$value.CCDF[data$Year==current_year+6]
-    table[5,8]<-data$value.HeadStart[data$Year==current_year+6]
-    table[6,8]<-data$value.PreK[data$Year==current_year+6]
-    table[7,8]<-data$value.section8[data$Year==current_year+6]
-    table[8,8]<-data$value.tanf[data$Year==current_year+6]
-    table[9,8]<-data$value.snap[data$Year==current_year+6]
-    table[10,8]<-data$value.wic[data$Year==current_year+6]
-    table[11,8]<-data$value.schoolmeals[data$Year==current_year+6]
-    table[12,8]<-data$value.cdctc[data$Year==current_year+6]
-    table[13,8]<-data$value.eitc[data$Year==current_year+6]
-    table[14,8]<-data$value.ctc[data$Year==current_year+6]
-    table[15,8]<-data$value.assistance.other[data$Year==current_year+6]
-    table[16,8]<-data$value.FATES[data$Year==current_year+6]
-    table[17,8]<-data$value.ssdi[data$Year==current_year+6]
-    table[18,8]<-data$value.ssi[data$Year==current_year+6]
-    table[19,8]<-data$value.hhf[data$Year==current_year+6]
-  }
-
-  if(horizon==8){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7", "Year 8")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-    
-    table[1,6]<-data$value.medicaid.adult[data$Year==current_year+4]
-    table[2,6]<-data$value.medicaid.child[data$Year==current_year+4]
-    table[3,6]<-data$value.aca[data$Year==current_year+4]
-    table[4,6]<-data$value.CCDF[data$Year==current_year+4]
-    table[5,6]<-data$value.HeadStart[data$Year==current_year+4]
-    table[6,6]<-data$value.PreK[data$Year==current_year+4]
-    table[7,6]<-data$value.section8[data$Year==current_year+4]
-    table[8,6]<-data$value.tanf[data$Year==current_year+4]
-    table[9,6]<-data$value.snap[data$Year==current_year+4]
-    table[10,6]<-data$value.wic[data$Year==current_year+4]
-    table[11,6]<-data$value.schoolmeals[data$Year==current_year+4]
-    table[12,6]<-data$value.cdctc[data$Year==current_year+4]
-    table[13,6]<-data$value.eitc[data$Year==current_year+4]
-    table[14,6]<-data$value.ctc[data$Year==current_year+4]
-    table[15,6]<-data$value.assistance.other[data$Year==current_year+4]
-    table[16,6]<-data$value.FATES[data$Year==current_year+4]
-    table[17,6]<-data$value.ssdi[data$Year==current_year+4]
-    table[18,6]<-data$value.ssi[data$Year==current_year+4]
-    table[19,6]<-data$value.hhf[data$Year==current_year+4]
-    
-    table[1,7]<-data$value.medicaid.adult[data$Year==current_year+5]
-    table[2,7]<-data$value.medicaid.child[data$Year==current_year+5]
-    table[3,7]<-data$value.aca[data$Year==current_year+5]
-    table[4,7]<-data$value.CCDF[data$Year==current_year+5]
-    table[5,7]<-data$value.HeadStart[data$Year==current_year+5]
-    table[6,7]<-data$value.PreK[data$Year==current_year+5]
-    table[7,7]<-data$value.section8[data$Year==current_year+5]
-    table[8,7]<-data$value.tanf[data$Year==current_year+5]
-    table[9,7]<-data$value.snap[data$Year==current_year+5]
-    table[10,7]<-data$value.wic[data$Year==current_year+5]
-    table[11,7]<-data$value.schoolmeals[data$Year==current_year+5]
-    table[12,7]<-data$value.cdctc[data$Year==current_year+5]
-    table[13,7]<-data$value.eitc[data$Year==current_year+5]
-    table[14,7]<-data$value.ctc[data$Year==current_year+5]
-    table[15,7]<-data$value.assistance.other[data$Year==current_year+5]
-    table[16,7]<-data$value.FATES[data$Year==current_year+5]
-    table[17,7]<-data$value.ssdi[data$Year==current_year+5]
-    table[18,7]<-data$value.ssi[data$Year==current_year+5]
-    table[19,7]<-data$value.hhf[data$Year==current_year+5]
-    
-    table[1,8]<-data$value.medicaid.adult[data$Year==current_year+6]
-    table[2,8]<-data$value.medicaid.child[data$Year==current_year+6]
-    table[3,8]<-data$value.aca[data$Year==current_year+6]
-    table[4,8]<-data$value.CCDF[data$Year==current_year+6]
-    table[5,8]<-data$value.HeadStart[data$Year==current_year+6]
-    table[6,8]<-data$value.PreK[data$Year==current_year+6]
-    table[7,8]<-data$value.section8[data$Year==current_year+6]
-    table[8,8]<-data$value.tanf[data$Year==current_year+6]
-    table[9,8]<-data$value.snap[data$Year==current_year+6]
-    table[10,8]<-data$value.wic[data$Year==current_year+6]
-    table[11,8]<-data$value.schoolmeals[data$Year==current_year+6]
-    table[12,8]<-data$value.cdctc[data$Year==current_year+6]
-    table[13,8]<-data$value.eitc[data$Year==current_year+6]
-    table[14,8]<-data$value.ctc[data$Year==current_year+6]
-    table[15,8]<-data$value.assistance.other[data$Year==current_year+6]
-    table[16,8]<-data$value.FATES[data$Year==current_year+6]
-    table[17,8]<-data$value.ssdi[data$Year==current_year+6]
-    table[18,8]<-data$value.ssi[data$Year==current_year+6]
-    table[19,8]<-data$value.hhf[data$Year==current_year+6]
-    
-    table[1,9]<-data$value.medicaid.adult[data$Year==current_year+7]
-    table[2,9]<-data$value.medicaid.child[data$Year==current_year+7]
-    table[3,9]<-data$value.aca[data$Year==current_year+7]
-    table[4,9]<-data$value.CCDF[data$Year==current_year+7]
-    table[5,9]<-data$value.HeadStart[data$Year==current_year+7]
-    table[6,9]<-data$value.PreK[data$Year==current_year+7]
-    table[7,9]<-data$value.section8[data$Year==current_year+7]
-    table[8,9]<-data$value.tanf[data$Year==current_year+7]
-    table[9,9]<-data$value.snap[data$Year==current_year+7]
-    table[10,9]<-data$value.wic[data$Year==current_year+7]
-    table[11,9]<-data$value.schoolmeals[data$Year==current_year+7]
-    table[12,9]<-data$value.cdctc[data$Year==current_year+7]
-    table[13,9]<-data$value.eitc[data$Year==current_year+7]
-    table[14,9]<-data$value.ctc[data$Year==current_year+7]
-    table[15,9]<-data$value.assistance.other[data$Year==current_year+7]
-    table[16,9]<-data$value.FATES[data$Year==current_year+7]
-    table[17,9]<-data$value.ssdi[data$Year==current_year+7]
-    table[18,9]<-data$value.ssi[data$Year==current_year+7]
-    table[19,9]<-data$value.hhf[data$Year==current_year+7]
-  }
-
-  if(horizon==9){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7", "Year 8", "Year 9")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-    
-    table[1,6]<-data$value.medicaid.adult[data$Year==current_year+4]
-    table[2,6]<-data$value.medicaid.child[data$Year==current_year+4]
-    table[3,6]<-data$value.aca[data$Year==current_year+4]
-    table[4,6]<-data$value.CCDF[data$Year==current_year+4]
-    table[5,6]<-data$value.HeadStart[data$Year==current_year+4]
-    table[6,6]<-data$value.PreK[data$Year==current_year+4]
-    table[7,6]<-data$value.section8[data$Year==current_year+4]
-    table[8,6]<-data$value.tanf[data$Year==current_year+4]
-    table[9,6]<-data$value.snap[data$Year==current_year+4]
-    table[10,6]<-data$value.wic[data$Year==current_year+4]
-    table[11,6]<-data$value.schoolmeals[data$Year==current_year+4]
-    table[12,6]<-data$value.cdctc[data$Year==current_year+4]
-    table[13,6]<-data$value.eitc[data$Year==current_year+4]
-    table[14,6]<-data$value.ctc[data$Year==current_year+4]
-    table[15,6]<-data$value.assistance.other[data$Year==current_year+4]
-    table[16,6]<-data$value.FATES[data$Year==current_year+4]
-    table[17,6]<-data$value.ssdi[data$Year==current_year+4]
-    table[18,6]<-data$value.ssi[data$Year==current_year+4]
-    table[19,6]<-data$value.hhf[data$Year==current_year+4]
-    
-    table[1,7]<-data$value.medicaid.adult[data$Year==current_year+5]
-    table[2,7]<-data$value.medicaid.child[data$Year==current_year+5]
-    table[3,7]<-data$value.aca[data$Year==current_year+5]
-    table[4,7]<-data$value.CCDF[data$Year==current_year+5]
-    table[5,7]<-data$value.HeadStart[data$Year==current_year+5]
-    table[6,7]<-data$value.PreK[data$Year==current_year+5]
-    table[7,7]<-data$value.section8[data$Year==current_year+5]
-    table[8,7]<-data$value.tanf[data$Year==current_year+5]
-    table[9,7]<-data$value.snap[data$Year==current_year+5]
-    table[10,7]<-data$value.wic[data$Year==current_year+5]
-    table[11,7]<-data$value.schoolmeals[data$Year==current_year+5]
-    table[12,7]<-data$value.cdctc[data$Year==current_year+5]
-    table[13,7]<-data$value.eitc[data$Year==current_year+5]
-    table[14,7]<-data$value.ctc[data$Year==current_year+5]
-    table[15,7]<-data$value.assistance.other[data$Year==current_year+5]
-    table[16,7]<-data$value.FATES[data$Year==current_year+5]
-    table[17,7]<-data$value.ssdi[data$Year==current_year+5]
-    table[18,7]<-data$value.ssi[data$Year==current_year+5]
-    table[19,7]<-data$value.hhf[data$Year==current_year+5]
-    
-    table[1,8]<-data$value.medicaid.adult[data$Year==current_year+6]
-    table[2,8]<-data$value.medicaid.child[data$Year==current_year+6]
-    table[3,8]<-data$value.aca[data$Year==current_year+6]
-    table[4,8]<-data$value.CCDF[data$Year==current_year+6]
-    table[5,8]<-data$value.HeadStart[data$Year==current_year+6]
-    table[6,8]<-data$value.PreK[data$Year==current_year+6]
-    table[7,8]<-data$value.section8[data$Year==current_year+6]
-    table[8,8]<-data$value.tanf[data$Year==current_year+6]
-    table[9,8]<-data$value.snap[data$Year==current_year+6]
-    table[10,8]<-data$value.wic[data$Year==current_year+6]
-    table[11,8]<-data$value.schoolmeals[data$Year==current_year+6]
-    table[12,8]<-data$value.cdctc[data$Year==current_year+6]
-    table[13,8]<-data$value.eitc[data$Year==current_year+6]
-    table[14,8]<-data$value.ctc[data$Year==current_year+6]
-    table[15,8]<-data$value.assistance.other[data$Year==current_year+6]
-    table[16,8]<-data$value.FATES[data$Year==current_year+6]
-    table[17,8]<-data$value.ssdi[data$Year==current_year+6]
-    table[18,8]<-data$value.ssi[data$Year==current_year+6]
-    table[19,8]<-data$value.hhf[data$Year==current_year+6]
-    
-    table[1,9]<-data$value.medicaid.adult[data$Year==current_year+7]
-    table[2,9]<-data$value.medicaid.child[data$Year==current_year+7]
-    table[3,9]<-data$value.aca[data$Year==current_year+7]
-    table[4,9]<-data$value.CCDF[data$Year==current_year+7]
-    table[5,9]<-data$value.HeadStart[data$Year==current_year+7]
-    table[6,9]<-data$value.PreK[data$Year==current_year+7]
-    table[7,9]<-data$value.section8[data$Year==current_year+7]
-    table[8,9]<-data$value.tanf[data$Year==current_year+7]
-    table[9,9]<-data$value.snap[data$Year==current_year+7]
-    table[10,9]<-data$value.wic[data$Year==current_year+7]
-    table[11,9]<-data$value.schoolmeals[data$Year==current_year+7]
-    table[12,9]<-data$value.cdctc[data$Year==current_year+7]
-    table[13,9]<-data$value.eitc[data$Year==current_year+7]
-    table[14,9]<-data$value.ctc[data$Year==current_year+7]
-    table[15,9]<-data$value.assistance.other[data$Year==current_year+7]
-    table[16,9]<-data$value.FATES[data$Year==current_year+7]
-    table[17,9]<-data$value.ssdi[data$Year==current_year+7]
-    table[18,9]<-data$value.ssi[data$Year==current_year+7]
-    table[19,9]<-data$value.hhf[data$Year==current_year+7]
-    
-    table[1,10]<-data$value.medicaid.adult[data$Year==current_year+8]
-    table[2,10]<-data$value.medicaid.child[data$Year==current_year+8]
-    table[3,10]<-data$value.aca[data$Year==current_year+8]
-    table[4,10]<-data$value.CCDF[data$Year==current_year+8]
-    table[5,10]<-data$value.HeadStart[data$Year==current_year+8]
-    table[6,10]<-data$value.PreK[data$Year==current_year+8]
-    table[7,10]<-data$value.section8[data$Year==current_year+8]
-    table[8,10]<-data$value.tanf[data$Year==current_year+8]
-    table[9,10]<-data$value.snap[data$Year==current_year+8]
-    table[10,10]<-data$value.wic[data$Year==current_year+8]
-    table[11,10]<-data$value.schoolmeals[data$Year==current_year+8]
-    table[12,10]<-data$value.cdctc[data$Year==current_year+8]
-    table[13,10]<-data$value.eitc[data$Year==current_year+8]
-    table[14,10]<-data$value.ctc[data$Year==current_year+8]
-    table[15,10]<-data$value.assistance.other[data$Year==current_year+8]
-    table[16,10]<-data$value.FATES[data$Year==current_year+8]
-    table[17,10]<-data$value.ssdi[data$Year==current_year+8]
-    table[18,10]<-data$value.ssi[data$Year==current_year+8]
-    table[19,10]<-data$value.hhf[data$Year==current_year+8]
-  }
-
-  if(horizon==10){
-    colnames(table)<-c("Current Job", "New Path: Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10")
-    table[1,1]<-dataInit$value.medicaid.adult[dataInit$Year==current_year]
-    table[2,1]<-dataInit$value.medicaid.child[dataInit$Year==current_year]
-    table[3,1]<-dataInit$value.aca[dataInit$Year==current_year]
-    table[4,1]<-dataInit$value.CCDF[dataInit$Year==current_year]
-    table[5,1]<-dataInit$value.HeadStart[dataInit$Year==current_year]
-    table[6,1]<-dataInit$value.PreK[dataInit$Year==current_year]
-    table[7,1]<-dataInit$value.section8[dataInit$Year==current_year]
-    table[8,1]<-dataInit$value.tanf[dataInit$Year==current_year]
-    table[9,1]<-dataInit$value.snap[dataInit$Year==current_year]
-    table[10,1]<-dataInit$value.wic[dataInit$Year==current_year]
-    table[11,1]<-dataInit$value.schoolmeals[dataInit$Year==current_year]
-    table[12,1]<-dataInit$value.cdctc[dataInit$Year==current_year]
-    table[13,1]<-dataInit$value.eitc[dataInit$Year==current_year]
-    table[14,1]<-dataInit$value.ctc[dataInit$Year==current_year]
-    table[15,1]<-dataInit$value.assistance.other[dataInit$Year==current_year]
-    table[16,1]<-dataInit$value.FATES[dataInit$Year==current_year]
-    table[17,1]<-dataInit$value.ssdi[dataInit$Year==current_year]
-    table[18,1]<-dataInit$value.ssi[dataInit$Year==current_year]
-    table[19,1]<-dataInit$value.hhf[dataInit$Year==current_year]
-    
-    table[1,2]<-data$value.medicaid.adult[data$Year==current_year]
-    table[2,2]<-data$value.medicaid.child[data$Year==current_year]
-    table[3,2]<-data$value.aca[data$Year==current_year]
-    table[4,2]<-data$value.CCDF[data$Year==current_year]
-    table[5,2]<-data$value.HeadStart[data$Year==current_year]
-    table[6,2]<-data$value.PreK[data$Year==current_year]
-    table[7,2]<-data$value.section8[data$Year==current_year]
-    table[8,2]<-data$value.tanf[data$Year==current_year]
-    table[9,2]<-data$value.snap[data$Year==current_year]
-    table[10,2]<-data$value.wic[data$Year==current_year]
-    table[11,2]<-data$value.schoolmeals[data$Year==current_year]
-    table[12,2]<-data$value.cdctc[data$Year==current_year]
-    table[13,2]<-data$value.eitc[data$Year==current_year]
-    table[14,2]<-data$value.ctc[data$Year==current_year]
-    table[15,2]<-data$value.assistance.other[data$Year==current_year]
-    table[16,2]<-data$value.FATES[data$Year==current_year]
-    table[17,2]<-data$value.ssdi[data$Year==current_year]
-    table[18,2]<-data$value.ssi[data$Year==current_year]
-    table[19,2]<-data$value.hhf[data$Year==current_year]
-    
-    table[1,3]<-data$value.medicaid.adult[data$Year==current_year+1]
-    table[2,3]<-data$value.medicaid.child[data$Year==current_year+1]
-    table[3,3]<-data$value.aca[data$Year==current_year+1]
-    table[4,3]<-data$value.CCDF[data$Year==current_year+1]
-    table[5,3]<-data$value.HeadStart[data$Year==current_year+1]
-    table[6,3]<-data$value.PreK[data$Year==current_year+1]
-    table[7,3]<-data$value.section8[data$Year==current_year+1]
-    table[8,3]<-data$value.tanf[data$Year==current_year+1]
-    table[9,3]<-data$value.snap[data$Year==current_year+1]
-    table[10,3]<-data$value.wic[data$Year==current_year+1]
-    table[11,3]<-data$value.schoolmeals[data$Year==current_year+1]
-    table[12,3]<-data$value.cdctc[data$Year==current_year+1]
-    table[13,3]<-data$value.eitc[data$Year==current_year+1]
-    table[14,3]<-data$value.ctc[data$Year==current_year+1]
-    table[15,3]<-data$value.assistance.other[data$Year==current_year+1]
-    table[16,3]<-data$value.FATES[data$Year==current_year+1]
-    table[17,3]<-data$value.ssdi[data$Year==current_year+1]
-    table[18,3]<-data$value.ssi[data$Year==current_year+1]
-    table[19,3]<-data$value.hhf[data$Year==current_year+1]
-    
-    table[1,4]<-data$value.medicaid.adult[data$Year==current_year+2]
-    table[2,4]<-data$value.medicaid.child[data$Year==current_year+2]
-    table[3,4]<-data$value.aca[data$Year==current_year+2]
-    table[4,4]<-data$value.CCDF[data$Year==current_year+2]
-    table[5,4]<-data$value.HeadStart[data$Year==current_year+2]
-    table[6,4]<-data$value.PreK[data$Year==current_year+2]
-    table[7,4]<-data$value.section8[data$Year==current_year+2]
-    table[8,4]<-data$value.tanf[data$Year==current_year+2]
-    table[9,4]<-data$value.snap[data$Year==current_year+2]
-    table[10,4]<-data$value.wic[data$Year==current_year+2]
-    table[11,4]<-data$value.schoolmeals[data$Year==current_year+2]
-    table[12,4]<-data$value.cdctc[data$Year==current_year+2]
-    table[13,4]<-data$value.eitc[data$Year==current_year+2]
-    table[14,4]<-data$value.ctc[data$Year==current_year+2]
-    table[15,4]<-data$value.assistance.other[data$Year==current_year+2]
-    table[16,4]<-data$value.FATES[data$Year==current_year+2]
-    table[17,4]<-data$value.ssdi[data$Year==current_year+2]
-    table[18,4]<-data$value.ssi[data$Year==current_year+2]
-    table[19,4]<-data$value.hhf[data$Year==current_year+2]
-    
-    table[1,5]<-data$value.medicaid.adult[data$Year==current_year+3]
-    table[2,5]<-data$value.medicaid.child[data$Year==current_year+3]
-    table[3,5]<-data$value.aca[data$Year==current_year+3]
-    table[4,5]<-data$value.CCDF[data$Year==current_year+3]
-    table[5,5]<-data$value.HeadStart[data$Year==current_year+3]
-    table[6,5]<-data$value.PreK[data$Year==current_year+3]
-    table[7,5]<-data$value.section8[data$Year==current_year+3]
-    table[8,5]<-data$value.tanf[data$Year==current_year+3]
-    table[9,5]<-data$value.snap[data$Year==current_year+3]
-    table[10,5]<-data$value.wic[data$Year==current_year+3]
-    table[11,5]<-data$value.schoolmeals[data$Year==current_year+3]
-    table[12,5]<-data$value.cdctc[data$Year==current_year+3]
-    table[13,5]<-data$value.eitc[data$Year==current_year+3]
-    table[14,5]<-data$value.ctc[data$Year==current_year+3]
-    table[15,5]<-data$value.assistance.other[data$Year==current_year+3]
-    table[16,5]<-data$value.FATES[data$Year==current_year+3]
-    table[17,5]<-data$value.ssdi[data$Year==current_year+3]
-    table[18,5]<-data$value.ssi[data$Year==current_year+3]
-    table[19,5]<-data$value.hhf[data$Year==current_year+3]
-    
-    table[1,6]<-data$value.medicaid.adult[data$Year==current_year+4]
-    table[2,6]<-data$value.medicaid.child[data$Year==current_year+4]
-    table[3,6]<-data$value.aca[data$Year==current_year+4]
-    table[4,6]<-data$value.CCDF[data$Year==current_year+4]
-    table[5,6]<-data$value.HeadStart[data$Year==current_year+4]
-    table[6,6]<-data$value.PreK[data$Year==current_year+4]
-    table[7,6]<-data$value.section8[data$Year==current_year+4]
-    table[8,6]<-data$value.tanf[data$Year==current_year+4]
-    table[9,6]<-data$value.snap[data$Year==current_year+4]
-    table[10,6]<-data$value.wic[data$Year==current_year+4]
-    table[11,6]<-data$value.schoolmeals[data$Year==current_year+4]
-    table[12,6]<-data$value.cdctc[data$Year==current_year+4]
-    table[13,6]<-data$value.eitc[data$Year==current_year+4]
-    table[14,6]<-data$value.ctc[data$Year==current_year+4]
-    table[15,6]<-data$value.assistance.other[data$Year==current_year+4]
-    table[16,6]<-data$value.FATES[data$Year==current_year+4]
-    table[17,6]<-data$value.ssdi[data$Year==current_year+4]
-    table[18,6]<-data$value.ssi[data$Year==current_year+4]
-    table[19,6]<-data$value.hhf[data$Year==current_year+4]
-    
-    table[1,7]<-data$value.medicaid.adult[data$Year==current_year+5]
-    table[2,7]<-data$value.medicaid.child[data$Year==current_year+5]
-    table[3,7]<-data$value.aca[data$Year==current_year+5]
-    table[4,7]<-data$value.CCDF[data$Year==current_year+5]
-    table[5,7]<-data$value.HeadStart[data$Year==current_year+5]
-    table[6,7]<-data$value.PreK[data$Year==current_year+5]
-    table[7,7]<-data$value.section8[data$Year==current_year+5]
-    table[8,7]<-data$value.tanf[data$Year==current_year+5]
-    table[9,7]<-data$value.snap[data$Year==current_year+5]
-    table[10,7]<-data$value.wic[data$Year==current_year+5]
-    table[11,7]<-data$value.schoolmeals[data$Year==current_year+5]
-    table[12,7]<-data$value.cdctc[data$Year==current_year+5]
-    table[13,7]<-data$value.eitc[data$Year==current_year+5]
-    table[14,7]<-data$value.ctc[data$Year==current_year+5]
-    table[15,7]<-data$value.assistance.other[data$Year==current_year+5]
-    table[16,7]<-data$value.FATES[data$Year==current_year+5]
-    table[17,7]<-data$value.ssdi[data$Year==current_year+5]
-    table[18,7]<-data$value.ssi[data$Year==current_year+5]
-    table[19,7]<-data$value.hhf[data$Year==current_year+5]
-    
-    table[1,8]<-data$value.medicaid.adult[data$Year==current_year+6]
-    table[2,8]<-data$value.medicaid.child[data$Year==current_year+6]
-    table[3,8]<-data$value.aca[data$Year==current_year+6]
-    table[4,8]<-data$value.CCDF[data$Year==current_year+6]
-    table[5,8]<-data$value.HeadStart[data$Year==current_year+6]
-    table[6,8]<-data$value.PreK[data$Year==current_year+6]
-    table[7,8]<-data$value.section8[data$Year==current_year+6]
-    table[8,8]<-data$value.tanf[data$Year==current_year+6]
-    table[9,8]<-data$value.snap[data$Year==current_year+6]
-    table[10,8]<-data$value.wic[data$Year==current_year+6]
-    table[11,8]<-data$value.schoolmeals[data$Year==current_year+6]
-    table[12,8]<-data$value.cdctc[data$Year==current_year+6]
-    table[13,8]<-data$value.eitc[data$Year==current_year+6]
-    table[14,8]<-data$value.ctc[data$Year==current_year+6]
-    table[15,8]<-data$value.assistance.other[data$Year==current_year+6]
-    table[16,8]<-data$value.FATES[data$Year==current_year+6]
-    table[17,8]<-data$value.ssdi[data$Year==current_year+6]
-    table[18,8]<-data$value.ssi[data$Year==current_year+6]
-    table[19,8]<-data$value.hhf[data$Year==current_year+6]
-    
-    table[1,9]<-data$value.medicaid.adult[data$Year==current_year+7]
-    table[2,9]<-data$value.medicaid.child[data$Year==current_year+7]
-    table[3,9]<-data$value.aca[data$Year==current_year+7]
-    table[4,9]<-data$value.CCDF[data$Year==current_year+7]
-    table[5,9]<-data$value.HeadStart[data$Year==current_year+7]
-    table[6,9]<-data$value.PreK[data$Year==current_year+7]
-    table[7,9]<-data$value.section8[data$Year==current_year+7]
-    table[8,9]<-data$value.tanf[data$Year==current_year+7]
-    table[9,9]<-data$value.snap[data$Year==current_year+7]
-    table[10,9]<-data$value.wic[data$Year==current_year+7]
-    table[11,9]<-data$value.schoolmeals[data$Year==current_year+7]
-    table[12,9]<-data$value.cdctc[data$Year==current_year+7]
-    table[13,9]<-data$value.eitc[data$Year==current_year+7]
-    table[14,9]<-data$value.ctc[data$Year==current_year+7]
-    table[15,9]<-data$value.assistance.other[data$Year==current_year+7]
-    table[16,9]<-data$value.FATES[data$Year==current_year+7]
-    table[17,9]<-data$value.ssdi[data$Year==current_year+7]
-    table[18,9]<-data$value.ssi[data$Year==current_year+7]
-    table[19,9]<-data$value.hhf[data$Year==current_year+7]
-    
-    table[1,10]<-data$value.medicaid.adult[data$Year==current_year+8]
-    table[2,10]<-data$value.medicaid.child[data$Year==current_year+8]
-    table[3,10]<-data$value.aca[data$Year==current_year+8]
-    table[4,10]<-data$value.CCDF[data$Year==current_year+8]
-    table[5,10]<-data$value.HeadStart[data$Year==current_year+8]
-    table[6,10]<-data$value.PreK[data$Year==current_year+8]
-    table[7,10]<-data$value.section8[data$Year==current_year+8]
-    table[8,10]<-data$value.tanf[data$Year==current_year+8]
-    table[9,10]<-data$value.snap[data$Year==current_year+8]
-    table[10,10]<-data$value.wic[data$Year==current_year+8]
-    table[11,10]<-data$value.schoolmeals[data$Year==current_year+8]
-    table[12,10]<-data$value.cdctc[data$Year==current_year+8]
-    table[13,10]<-data$value.eitc[data$Year==current_year+8]
-    table[14,10]<-data$value.ctc[data$Year==current_year+8]
-    table[15,10]<-data$value.assistance.other[data$Year==current_year+8]
-    table[16,10]<-data$value.FATES[data$Year==current_year+8]
-    table[17,10]<-data$value.ssdi[data$Year==current_year+8]
-    table[18,10]<-data$value.ssi[data$Year==current_year+8]
-    table[19,10]<-data$value.hhf[data$Year==current_year+8]
-    
-    table[1,11]<-data$value.medicaid.adult[data$Year==current_year+9]
-    table[2,11]<-data$value.medicaid.child[data$Year==current_year+9]
-    table[3,11]<-data$value.aca[data$Year==current_year+9]
-    table[4,11]<-data$value.CCDF[data$Year==current_year+9]
-    table[5,11]<-data$value.HeadStart[data$Year==current_year+9]
-    table[6,11]<-data$value.PreK[data$Year==current_year+9]
-    table[7,11]<-data$value.section8[data$Year==current_year+9]
-    table[8,11]<-data$value.tanf[data$Year==current_year+9]
-    table[9,11]<-data$value.snap[data$Year==current_year+9]
-    table[10,11]<-data$value.wic[data$Year==current_year+9]
-    table[11,11]<-data$value.schoolmeals[data$Year==current_year+9]
-    table[12,11]<-data$value.cdctc[data$Year==current_year+9]
-    table[13,11]<-data$value.eitc[data$Year==current_year+9]
-    table[14,11]<-data$value.ctc[data$Year==current_year+9]
-    table[15,11]<-data$value.assistance.other[data$Year==current_year+9]
-    table[16,11]<-data$value.FATES[data$Year==current_year+9]
-    table[17,11]<-data$value.ssdi[data$Year==current_year+9]
-    table[18,11]<-data$value.ssi[data$Year==current_year+9]
-    table[19,11]<-data$value.hhf[data$Year==current_year+9]
+  dataInit_selected <- subset(dataInit, select = c(benefitslist, "Year"))  %>%
+    filter(Year==current_year) 
+  for (i in 1:length(benefitslist)){
+    table[i,1] <- dataInit_selected[i]
+    data_selected <- subset(data, select = c(benefitslist[i], "year.index")) %>%
+      filter(year.index %in% seq(1,horizon))
+    table[i,1:horizon+1] <- data_selected[,1]
   }
   
   table <- format(round(table,0), big.mark=",")
@@ -7185,7 +5957,7 @@ function.careerMap<-function(data, data_init){
   #-------------------------
   # Healthcare expense HHF
   
-  if(temp$healthcare.source[2] != "Medicaid/CHIP") {
+  if(temp$healthcare.source[1] != "Medicaid/CHIP") {
   temp$hhf_healthcare_full<-rowMaxs(cbind(temp$netexp.healthcare,0)) # full HHF
   
   # Remove out-of-pocket misc. healthcare expenses since program only covers premiums
@@ -7204,6 +5976,7 @@ function.careerMap<-function(data, data_init){
   subset<-data$Year %in% seq(minYear, minYear + careerMapLength)
   
   data$netexp.rentormortgage[subset]<-temp$netexp.rentormortgage
+  data$netexp.housing[subset] <- temp$netexp.rentormortgage + temp$netexp.utilities
   data$value.section8[subset]<-temp$value.section8
   data$value.hhf[subset]<-temp$value.hhf
   

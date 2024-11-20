@@ -1055,7 +1055,7 @@ function.careerMap<-function(data, data_init){
   
   # Healthcare expense HHF
   
-  if(temp$healthcare.source[2] != "Medicaid/CHIP") {
+  if(temp$healthcare.source[1] != "Medicaid/CHIP") {
     temp$hhf_healthcare_full<-rowMaxs(cbind(temp$netexp.healthcare,0)) # full HHF
     
     # Remove out-of-pocket misc. healthcare expenses since program only covers premiums
@@ -1073,6 +1073,7 @@ function.careerMap<-function(data, data_init){
   subset<-data$Year %in% seq(minYear, minYear + careerMapLength)
   
   data$netexp.rentormortgage[subset]<-temp$netexp.rentormortgage
+  data$netexp.housing[subset] <- temp$netexp.rentormortgage + temp$netexp.utilities
   data$value.section8[subset]<-temp$value.section8
   data$value.hhf[subset]<-temp$value.hhf
   

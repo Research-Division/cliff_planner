@@ -2523,14 +2523,15 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    
                                                                    # UNCOMMENT WHEN DISABILITY IS ADDED
                                                                    ,fluidRow(
-                                                                     column(7, offset=1, conditionalPanel(condition = "input.fam_disab=='Yes' & input.medicaid_adults==true"
+                                                                     column(11, offset=1, conditionalPanel(condition = "input.fam_disab=='Yes' & input.medicaid_adults==true"
                                                                                                           , checkboxInput("prev_ssi", "Has anyone in the home ever received SSI?", FALSE)
                                                                      )))
                                                                    
                                                                    
                                                                    ,br()
                                                                    
-                                                                   ,checkboxInput("medicaid_child", strong("Medicaid for Children/Children's Health Insurance (CHIP)"), FALSE)
+                                                                   ,fluidRow(
+                                                                     column(12,offset=0, checkboxInput("medicaid_child", strong("Medicaid for Children/Children's Health Insurance (CHIP)"), FALSE)
                                                                    , conditionalPanel(condition = "input.state=='AL'", h6("ALL Kids"))
                                                                    , conditionalPanel(condition = "input.state=='AK'", h6("Denali Kidcare"))
                                                                    , conditionalPanel(condition = "input.state=='AZ'", h6("KidsCare"))
@@ -2576,7 +2577,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    , conditionalPanel(condition = "input.state=='WA'", h6("Apple Health for Kids"))
                                                                    , conditionalPanel(condition = "input.state=='WI'", h6("BadgerCare Plus"))
                                                                    , conditionalPanel(condition = "input.state=='WY'", h6("KidCare CHIP"))
-                                                                   
+                                                                    ))
                                                                    ,br()
                                                                    
                                                                    ,checkboxInput("aca", strong("Health Insurance Marketplace Subsidies"), FALSE)
@@ -2624,7 +2625,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    # If we HAVE CCDF for a selected state
                                                                    
                                                                    ,fluidRow(
-                                                                     column(3, offset = 0, checkboxInput("ccdf", strong("Subsidized Childcare"), FALSE) 
+                                                                     column(11, offset = 0, checkboxInput("ccdf", strong("Subsidized Childcare"), FALSE) 
                                                                             , conditionalPanel(condition = "input.state=='AL'", h6("Alabama Child Care Assistance"))
                                                                             , conditionalPanel(condition = "input.state=='AK'", h6("PASS Program"))
                                                                             , conditionalPanel(condition = "input.state=='AZ'", h6("Child Care Assistance Program"))
@@ -2691,7 +2692,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             
                                                                      )
                                                                      
-                                                                     ,column(4,offset=0, conditionalPanel(condition = "input.ccdf==true & input.state=='FL' & (input.county_main=='Martin County' | input.county_main=='St. Lucie County')"
+                                                                     ,column(11,offset=0, conditionalPanel(condition = "input.ccdf==true & input.state=='FL' & (input.county_main=='Martin County' | input.county_main=='St. Lucie County')"
                                                                                                           , checkboxInput("fates", strong("This program includes FATES"), FALSE)))
                                                                      
                                                                    )
@@ -2707,18 +2708,18 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    ,br()
                                                                    
                                                                    ,fluidRow(
-                                                                     column(3, offset = 0 ,checkboxInput("prek", strong("State-Funded Pre-Kindergarten"), FALSE) )
+                                                                     column(11, offset = 0 ,checkboxInput("prek", strong("State-Funded Pre-Kindergarten"), FALSE) )
                                                                      
                                                                    ) 
                                                                    
                                                                    ,br() 
                                                                    ,fluidRow(
-                                                                     column(4, offset = 0 ,checkboxInput("head_start", strong("Head Start or Early Head Start"), FALSE) )
+                                                                     column(11, offset = 0 ,checkboxInput("head_start", strong("Head Start or Early Head Start"), FALSE) )
                                                                    ) 
                                                                    
                                                                    # #initial vs cont.
                                                                    ,fluidRow(
-                                                                     column(7, offset=1, conditionalPanel(condition = "input.head_start==true"
+                                                                     column(11, offset=1, conditionalPanel(condition = "input.head_start==true"
                                                                                                           , checkboxInput("headstart_cont", "My child(ren) are NOT currently enrolled in Head Start*", FALSE)
                                                                                                           , checkboxInput("earlyheadstart_cont", "My child(ren) are NOT currently enrolled in Early Head Start*", FALSE)
                                                                                                           , h6("*If this box is checked, we estimate enroll eligibility in this program.")))
@@ -2726,7 +2727,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    ,br()
                                                                    
                                                                    ,fluidRow(
-                                                                     column(3,offset=0, checkboxInput("section8", strong("Section 8 Housing Voucher"), FALSE))
+                                                                     column(11,offset=0, checkboxInput("section8", strong("Section 8 Housing Voucher"), FALSE))
                                                                      
                                                                      # #initial vs cont.
                                                                      # ,column(6, offset=0, conditionalPanel(condition = "input.section8==true"
@@ -2736,7 +2737,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    ,br()
                                                                    
                                                                    ,conditionalPanel(condition = "input.state=='DC'"
-                                                                                     ,checkboxInput("frsp", strong("Family Re-Housing Stabilization Program"), FALSE)
+                                                                                     ,checkboxInput("frsp", strong("Family Re-Housing Stabilization Program (FRSP)"), FALSE)
                                                                                      ,br()
                                                                    )
                                                                    
@@ -2748,7 +2749,8 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    )
                                                                    
                                                                    
-                                                                   ,conditionalPanel(condition = "input.state=='DC' & input.frsp == true & input.section8 == true",
+                                                                   ,conditionalPanel(condition = "input.state=='DC' & ((input.frsp == true & input.section8 == true)
+                                                                                    | (input.careerMap == true & input.section8 == true) | (input.frsp == true & input.careerMap == true))",
                                                                                      h4(span(textOutput("error_frsp"), style="color:red"))
                                                                                      ,br()
                                                                    )
@@ -2765,7 +2767,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    
                                                                    # UNCOMMENT WHEN DISABILITY IS ADDED
                                                                    ,fluidRow(
-                                                                     column(4, offset = 0 ,
+                                                                     column(11, offset = 0 ,
                                                                             conditionalPanel(condition="input.fam_disab=='Yes' & input.state != 'AL'", checkboxInput("ssdi", strong("SSDI"), FALSE),
                                                                                              h6("Social Security Disability Insurance")
                                                                             ))
