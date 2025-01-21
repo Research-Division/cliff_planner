@@ -1862,7 +1862,8 @@ BenefitsCalculator.FoodandHousing<-function(data, APPLY_SECTION8=FALSE, APPLY_LI
     
   }
 
-  }}}
+  }}} 
+ 
   # SNAP
   if(APPLY_SNAP==FALSE){
     data$value.snap<-0

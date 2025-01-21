@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$error_frsp <- renderText({
-    "Warning: Section 8 cannot be chosen with either the FRSP or CareerMAP programs. Please select one program."
+    "Warning: Section 8, FRSP, CareerMAP and DC Flex are mutually exclusive programs. Please select one program."
   })
 
   output$error_family_age <- renderText({
@@ -1438,12 +1438,14 @@ shinyServer(function(input, output, session) {
       if (programs.wic)
         benefitslist<-c(benefitslist,"Women, Infants and Children Nutrition Program (WIC)")
       programs.ccdf<-isolate(as.logical(input$ccdf))
-      if (programs.ccdf)
-        benefitslist<-c(benefitslist,"Child Care Subsidy (CCDF)")
+      if (programs.ccdf) {
+        if (inputs$stateAbbrev == "FL")
+          benefitslist<-c(benefitslist,"CCDF/SR Plus")
+        else
+          benefitslist<-c(benefitslist,"Child Care Subsidy (CCDF)")
+      }
       programs.ccdf_cont<-isolate(as.logical(input$ccdf_cont))
-      programs.fates<-isolate(as.logical(input$fates))
-      if (programs.fates)
-        benefitslist<-c(benefitslist,"FATES")
+      programs.fates<-FALSE 
       programs.head_start<-isolate(as.logical(input$head_start))
       if (programs.head_start)
         benefitslist<-c(benefitslist,"Head Start")
@@ -1476,9 +1478,10 @@ shinyServer(function(input, output, session) {
     #    programs.ssi <- FALSE
     #  }
      
-      frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (partitipants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
-      careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (partitipants pay 30% of their income towards rent)
+      frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (participants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
+      careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (participants pay 30% of their income towards rent)
       programs.rap <- isolate(as.logical(input$rap))
+      programs.dcflex <- isolate(as.logical(input$DCflex))
       programs.frsp<<-FALSE
       programs.careermap<<-FALSE
 
@@ -1525,6 +1528,8 @@ shinyServer(function(input, output, session) {
         benefitslist<-c(benefitslist,"Career MAP - Housing","Career MAP Income Support")
       else if (frsp)
         benefitslist<-c(benefitslist,"FRSP")
+      else if (programs.dcflex)
+        benefitslist<-c(benefitslist,"DC Flex")
       
       # Initial/Continuous Eligibility
       contelig.headstart <- isolate(as.logical(input$headstart_cont))
@@ -2893,39 +2898,35 @@ shinyServer(function(input, output, session) {
 
       inputs <<- inputs
 
-    yyyyy <<- 1
-
       data_init<-BenefitsCalculator.OtherBenefits(data_init, APPLY_TANF=programs.tanf, APPLY_SSDI=programs.ssdi, APPLY_SSI=programs.ssi)
       data_init<-BenefitsCalculator.Childcare(data_init, APPLY_CHILDCARE, APPLY_HEADSTART=programs.head_start, APPLY_PREK=programs.prek, APPLY_CCDF=programs.ccdf, APPLY_FATES=programs.fates, contelig.ccdf = `contelig.ccdf`,contelig.headstart = `contelig.headstart`, contelig.earlyheadstart = `contelig.earlyheadstart`) #option to add APPLY_FATES
       data_init<-BenefitsCalculator.Healthcare(data_init, APPLY_HEALTHCARE=TRUE, APPLY_MEDICAID_ADULT = programs.medicaid_adults, APPLY_MEDICAID_CHILD = programs.medicaid_child, APPLY_ACA = programs.aca)
       data_init<-BenefitsCalculator.FoodandHousing(data_init, APPLY_SECTION8=programs.section8, APPLY_LIHEAP, APPLY_SNAP=programs.snap, APPLY_SLP=programs.schoolMeals, APPLY_WIC=programs.wic, APPLY_RAP=programs.rap, APPLY_FRSP = programs.frsp, frsp_share = `frsp_share`, CareerMAP = programs.careermap) # OPTION TO END WITH APPLY_RAP
 
-      yyyyy <<- 2
-      
       data_earned_init <- data_init
       data_earned_init$income <- data_earned_init$income - data_earned_init$income.investment - data_earned_init$income.child_support
       data_earned_init$income.investment <- 0
       data_earned_init$income.child_support <- 0
       data_earned_init$income.gift <- 0
       
-      yyyyy <<- 3
-
       data_init<-BenefitsCalculator.TaxesandTaxCredits(data_init, APPLY_EITC=programs.eitc, APPLY_CTC=programs.ctc, APPLY_CDCTC=programs.cdctc)
       data_earned_init<-BenefitsCalculator.TaxesandTaxCredits(data_earned_init, APPLY_EITC=programs.eitc, APPLY_CTC=programs.ctc, APPLY_CDCTC=programs.cdctc)
-      
-      yyyyy <<- 4
       
       data_init<-data_init %>% # Generate individual-level after-tax income
         mutate(income.aftertax.noTC_ind=case_when(income_ind-(tax.income.fed+tax.income.state+tax.FICA)>0 ~ income_ind-(tax.income.fed+tax.income.state+tax.FICA), TRUE ~0))
 
       data_init$value.hhf<-0 # iniial value of Cash Hold Harmless Fund
       
-      yyyyy <<- 5
-
       data_init<-function.createVars.CLIFF(data_init)
       data_earned_init <- function.createVars.CLIFF(data_earned_init)
       
-      yyyyy <<- 6
+      if (programs.dcflex==TRUE){
+        data_init <- function.DCFlex(data_init)  
+        data_init$netexp.rentormortgage <- data_init$netexp.rentormortgage - data_init$value.dcflex
+        data_init$netexp.housing <- data_init$netexp.housing - data_init$value.dcflex
+        data_init$total.transfers <- data_init$total.transfers + data_init$value.dcflex
+        data_init$NetResources <- data_init$NetResources + data_init$value.dcflex
+      }
 
       #data_init$total.transfers <- data_init$total.transfers + data_init$value.section8
 
@@ -2935,7 +2936,6 @@ shinyServer(function(input, output, session) {
       
       data_init$taxedEarnedIncomeOnly <- data_earned_init$income.aftertax.noTC
       
-      yyyyy <<- 7
 
       data_initial <<- data_init
 
@@ -3037,7 +3037,13 @@ shinyServer(function(input, output, session) {
         data_1$total.transfers <- data_1$total.transfers + data_1$value.hhf #+ data_1$value.section8
         data_1$NetResources <- data_1$NetResources + data_1$value.hhf #+ data_1$value.section8
 
-
+        if (programs.dcflex==TRUE){
+          data_1 <- function.DCFlex(data_1)  
+          data_1$netexp.rentormortgage <- data_1$netexp.rentormortgage - data_1$value.dcflex
+          data_1$netexp.housing <- data_1$netexp.housing - data_1$value.dcflex
+          data_1$total.transfers <- data_1$total.transfers + data_1$value.dcflex
+          data_1$NetResources <- data_1$NetResources + data_1$value.dcflex
+        }
         data_one <<- data_1 # output data to global environment
 
       }
@@ -3146,6 +3152,13 @@ shinyServer(function(input, output, session) {
         data_2$total.transfers <- data_2$total.transfers + data_2$value.hhf #+ data_2$value.section8
         data_2$NetResources <- data_2$NetResources + data_2$value.hhf #+ data_2$value.section8
 
+        if (programs.dcflex==TRUE){
+          data_2 <- function.DCFlex(data_2)  
+          data_2$netexp.rentormortgage <- data_2$netexp.rentormortgage - data_2$value.dcflex
+          data_2$netexp.housing <- data_2$netexp.housing - data_2$value.dcflex
+          data_2$total.transfers <- data_2$total.transfers + data_2$value.dcflex
+          data_2$NetResources <- data_2$NetResources + data_2$value.dcflex
+        }
             data_two <<- data_2 # output to global environment
 
       }
@@ -3367,6 +3380,28 @@ shinyServer(function(input, output, session) {
       })
 
       updateActionButton(session, "calculateBudget", label = "Recalculate My Budget")
+
+      # table for screen reader    
+      srtablehorizon <- 10
+      results_table <- table.Summary(rbind(data_2, data_1), data_init, benefitslist, srtablehorizon)
+      
+      # download results table for screen reader
+      output$print1 <- downloadHandler(
+        
+        filename = function(){
+          paste0("DataTables", "_ScreenReader.xlsx")
+        },
+        #filename = "CLIFF_Dashboard_Results_Summary.xlsx",
+        content = function(file){
+          # save(data, file=file)
+          # write.xlsx(data, file=file)
+          require(openxlsx)
+          #list_datasets <- list("Annual Results" = data_1, "Cross Section Results" = csdata_1, "Data Dictionary" = Data_Dictionary)
+          write.xlsx(results_table, file=file)
+          
+        }
+        
+      )
 
     }
 

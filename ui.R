@@ -71,7 +71,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      br(),
     # Select state and county  
       #---------------------
-                                     # QUESTION
+                                     # State Selection QUESTION
                                      fluidRow(
                                        column(5, offset = 2,
                                               tags$form(
@@ -141,8 +141,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      #---------------------
-                                     # QUESTION
-                                     #br(),
+                                     # County Selection QUESTION
                                      
                                      fluidRow(
                                        column(5, offset = 2,
@@ -245,6 +244,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             , selected = "No"))
                                        )
                                      ),
+    
     # Inputs for family size, disability                                 
                                      #---------------------
                                      # QUESTION
@@ -288,7 +288,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                              h4(tags$label(`for` = "num_other_family", br(), "How many?")
                                                                                              )
                                                                    )))
-                                              ),  
+                                              )  
                                               #  h4("How many?"))
                                        ),
                                        column(5,
@@ -341,7 +341,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             h4(tags$label(`for` = "fam_disab",
                                                                                           br(), "Does anyone in the home have a disability?")
                                                                             )
-                                                  ))),
+                                                  ))) 
                                        ),
                                        column(5,
                                               radioButtons("fam_disab", label = NULL,
@@ -355,7 +355,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      
                                      br(),
                                      hr(),
-                                     
+                                     # First adult age
                                      fluidRow(
                                        column(5, offset = 2,
                                               tags$form(
@@ -385,14 +385,15 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                 selected="No")
                                                                    
                                                 )
-                                       ),
+                                       )
                                      ),
                                      
                                      fluidRow(
                                        column(12, offset = 3,
                                               h4(span(textOutput("message_adult_age"), style="color:red")))
                                      ),
-                                     
+    
+                                     # Spouse/Partner age and earnings
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.partnered == 'Yes'",
@@ -455,7 +456,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        )
                                      ),
                                      
-                                     
+                                     # Family member 1 age and earnings (if is adult)
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 0",
@@ -547,10 +548,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      
-                                     
-                                     
-                                     
-                                     
+                                     # Family member 2 age and earnings (if is adult)
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 1",
@@ -642,6 +640,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      
+                                     # Family member 3 age and earnings (if is adult)
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 2",
@@ -680,9 +679,6 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        )
                                        
                                      ),
-                                     
-                                     
-                                     
                                      
                                      
                                      fluidRow(
@@ -736,9 +732,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      
-                                     
-                                     
-                                     
+                                     # Family member 4 age and earnings (if is adult)
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 3",
@@ -831,12 +825,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      
-                                     
-                                     
-                                     
-                                     
-                                    
-                                     
+                                     # Family member 5 age and earnings (if is adult)
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 4",
@@ -854,7 +843,6 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             h6("Enter 0 for children younger than 1")
                                                                )))
                                        ) 
-                                       
                                        
                                        , column(5,
                                                 conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 4",
@@ -899,7 +887,9 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                               conditionalPanel(condition="input.partnered=='No' & input.other_family=='Yes' & input.fam_disab == 'Yes' & input.age_family_5>18",
                                                                numericInput("sixth_adult_earnings_2", value=0, label = NULL, min=0))
                                        )
-                                     ),          
+                                     ), 
+    
+                                     # Family member 6 age
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 5",
@@ -937,7 +927,8 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        )
                                        
                                      ),
-                                     
+    
+                                     # Family member 7 age
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 6",
@@ -976,6 +967,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        
                                      ),
                                      
+                                     # Family member 8 age
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 7",
@@ -1013,6 +1005,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        )
                                      ),
                                      
+                                     # Family member 9 age
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 8",
@@ -1051,6 +1044,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        )
                                      ),
                                      
+                                     # Family member 10 age
                                      fluidRow(
                                        column(5, offset = 2,
                                               conditionalPanel(condition="input.other_family=='Yes' & input.num_other_family > 9",
@@ -1089,7 +1083,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      
-                                     
+                                     # Current job wage, hours and health insurance
                                      br(),
                                      tags$div(align = "center",
                                               tags$h2("Client's Current Job"),
@@ -1115,7 +1109,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        ),
                                        column(5,
                                               numericInput("startingWage_c", value=0, label = NULL, min=0)
-                                       ),
+                                       )
                                      ),
                                      
                                      fluidRow(
@@ -1134,7 +1128,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                        ),
                                        column(5, 
                                               numericInput("current_hours", value=0, label = NULL, min=0)
-                                       ),
+                                       )
                                      ),
                                      
                                      fluidRow(
@@ -1156,7 +1150,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                           list(#" " = "empty",
                                                             "Yes" = "Yes"
                                                             , "No" = "No"), selected = "No")
-                                       ),
+                                       )
                                      ),
                                      
                                      
@@ -1236,7 +1230,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      #                         
                                      #                  )
                             )
-                   ),
+                   ),    # end of tab "Client Profile"
                    
                    
                    #-------------------------------------------------------------------------------- 
@@ -1291,7 +1285,8 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                , "Create career path" = "custom"
                                                           ), selected = "empty")
                                      ),
-                                     #zyx <<- 121, 
+                                     
+                                     # Career 1 is current job
                                      conditionalPanel(condition = "input.type_career_1== 'current'",
                                                       br(),
                                                       #     h5(align = "center","We need to ask a few more questions about your current job. What is your occupation and how many years of experience do you have in that job?"),
@@ -1389,7 +1384,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      ),
                                      
                                      ############################################################################################################################################################################################################################
-                                     
+                                     # Career 1 customization
                                      conditionalPanel(condition = "input.type_career_1== 'custom'",
                                                       
                                                       br(),
@@ -1681,10 +1676,10 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                                                          , selected = "no", inline = T)
                                                                                                           )
                                                                                          )
-                                                                                ),
+                                                                                )
                                                                                 
                                                                                
-                                                               ),
+                                                               )
                                                                
                                                                
                                                                
@@ -1723,6 +1718,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                           ), selected = "empty")
                                      ),
                                      
+                                     # Career 2 customization
                                      conditionalPanel(condition = "input.type_career_2== 'custom'",
                                                       br(),
                                                       fluidRow(
@@ -2000,7 +1996,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                                                          , selected = "no", inline = T)
                                                                                          )
                                                                                   )
-                                                                                ),
+                                                                                )
                                                                                 
                                                                )
                                                                )
@@ -2034,7 +2030,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                     class="btn btn-primary btn-lg")
                                               )
                                        )
-                                     ),
+                                     )
                                      
                                      #                         ,   tags$script('
                                      #    pressedKeyCount = 0;
@@ -2045,7 +2041,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                      #    }
                                      #    });'
                                      #                            )
-                            )),
+                            )),    # end of tab 3
                    
                    
                    #-------------------------------------------------------------------------------- 
@@ -2166,9 +2162,9 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                        
                                                        
                                                        
-                                     )
+                                     )    # end of conditionalPanel line #2079
                             )
-                   ),
+                   ),    # end of tab 4
                    
                    
                    #-------------------------------------------------------------------------------- 
@@ -2213,7 +2209,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    tags$div(align = "center",
                                                                             tags$h4("Please list income and assets. The information on this page will help screen for public assistance eligibility by program. Please be as accurate and thorough as possible. No information is stored. "),
                                                                    ),
-                                                                   
+                                                                   # Income
                                                                    br(),
                                                                    h2("Income", class = "title fit-h1"),
                                                                    br(),
@@ -2222,7 +2218,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    #---------------------
                                                                    # QUESTION
                                                                    br(),
-                                                                   
+                                                                   # Child support income
                                                                    fluidRow(
                                                                      column(5, offset = 2,
                                                                             tags$form(
@@ -2243,10 +2239,10 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             numericInput("child_support_income", value=0, label = NULL, min=0))
                                                                    ),
                                                                    
-                                                                   
                                                                    #---------------------
                                                                    # QUESTION
                                                                    br(),
+                                                                   # investment income
                                                                    fluidRow(
                                                                      column(5, offset = 2,
                                                                             tags$form(
@@ -2293,6 +2289,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    
                                                                    #---------------------
                                                                    # QUESTION
+                                                                   # Bank account and retirement account
                                                                    fluidRow(
                                                                      column(5, offset = 2,
                                                                             tags$form(
@@ -2399,15 +2396,14 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                      ),
                                                                      column(6, 
                                                                             conditionalPanel(condition = "input.checking_account < 0 | input.savings_account < 0
-                                                          | input.individual_stocks < 0 | input.individual_bonds < 0
-                                                          | input.mutual_funds < 0 | input.money_market < 0
-                                                  | input.other_assets < 0 | input.other_savings < 0
-                                                  | input.four01_K < 0  | input.traditional_ira < 0 | input.roth_ira < 0
-                                                  | input.other_retirement < 0"
-                                                                                             ,
+                                                                                            | input.individual_stocks < 0 | input.individual_bonds < 0
+                                                                                            | input.mutual_funds < 0 | input.money_market < 0
+                                                                                            | input.other_assets < 0 | input.other_savings < 0
+                                                                                            | input.four01_K < 0  | input.traditional_ira < 0 | input.roth_ira < 0
+                                                                                            | input.other_retirement < 0",
                                                                                              
                                                                                              #br(),
-                                                                                             h4(span(textOutput("error_assets"), style="color:red")),
+                                                                                             h4(span(textOutput("error_assets"), style="color:red"))
                                                                                              #br(),
                                                                                              #br()
                                                                             )),
@@ -2425,7 +2421,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    
                                                           )
                                                           
-                                                 ),
+                                                 ),    #end of tabPanel "1 - Income and Assets"
                                                  
                                                  
                                                  tabPanel("2 - Public Assistance",
@@ -2440,6 +2436,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    ,br()
                                                                    
                                                                    ,br()
+                                                                   # medicaid_adults
                                                                    #source: https://www.healthcare.gov/medicaid-chip-program-names/ & kaiser for CHIP
                                                                    ,checkboxInput("medicaid_adults", strong("Medicaid for Adults"), FALSE)
                                                                    
@@ -2447,7 +2444,6 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                       ,h6("Arizona Health Care Cost Containment System (AHCCCS)")) 
                                                                    , conditionalPanel(condition = "input.state=='AK'"
                                                                                       ,h6("DenaliCare")) 
-                                                                   
                                                                    , conditionalPanel(condition = "input.state=='CA'"
                                                                                       ,h6("Medi-Cal")) 
                                                                    , conditionalPanel(condition = "input.state=='CO'"
@@ -2527,9 +2523,9 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                                           , checkboxInput("prev_ssi", "Has anyone in the home ever received SSI?", FALSE)
                                                                      )))
                                                                    
-                                                                   
                                                                    ,br()
                                                                    
+                                                                   # Chip
                                                                    ,fluidRow(
                                                                      column(12,offset=0, checkboxInput("medicaid_child", strong("Medicaid for Children/Children's Health Insurance (CHIP)"), FALSE)
                                                                    , conditionalPanel(condition = "input.state=='AL'", h6("ALL Kids"))
@@ -2580,52 +2576,58 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                     ))
                                                                    ,br()
                                                                    
+                                                                   # ACA
                                                                    ,checkboxInput("aca", strong("Health Insurance Marketplace Subsidies"), FALSE)
                                                                    
                                                                    ,br()
                                                                    
-                                                                   # If we HAVE TANF for a selected state
-                                                                   
-                                                            
-                                                                                     , checkboxInput("tanf", strong("TANF"), FALSE)
-                                                                                     , h6("Temporary Assistance for Needy Families")
+                                                                   # TANF
+                                                                   , checkboxInput("tanf", strong("TANF"), FALSE)
+                                                                   , h6("Temporary Assistance for Needy Families")
                                                                    
                                                                    ,br()
                                                                    
+                                                                   # SNAP
                                                                    ,checkboxInput("snap", strong("SNAP"), FALSE)
                                                                    ,h6("Supplemental Nutrition Assistance Program")
                                                                    
                                                                    ,br()
                                                                    
+                                                                   # WIC
                                                                    ,checkboxInput("wic", strong("WIC"), FALSE)
                                                                    ,h6("Special Supplemental Nutrition Program for Women, Infants, and Children")
                                                                    
                                                                    ,br()
                                                                    
+                                                                   # school meals
                                                                    ,checkboxInput("schoolMeals", strong("Free or Reduced Price School Meals"), FALSE)
                                                                    ,h6("School Breakfast and National School Lunch Programs")
                                                                    
                                                                    ,br()
                                                                    
+                                                                   # EITC
                                                                    ,checkboxInput("eitc", strong("EITC"), FALSE)
                                                                    ,h6("Earned Income Tax Credit")
                                                                    
                                                                    ,br()
                                                                    
+                                                                   # CTC
                                                                    ,checkboxInput("ctc", strong("CTC"), FALSE)
                                                                    ,h6("Child Tax Credit")
                                                                    
                                                                    ,br()
                                                                    
+                                                                   #CDCTC
                                                                    ,checkboxInput("cdctc", strong("CDCTC"), FALSE)
                                                                    ,h6("Child and Dependent Care Tax Credit")
                                                                    
                                                                    ,br()
                                                                    
-                                                                   # If we HAVE CCDF for a selected state
-                                                                   
+                                                                   # CCDF
                                                                    ,fluidRow(
-                                                                     column(11, offset = 0, checkboxInput("ccdf", strong("Subsidized Childcare"), FALSE) 
+                                                                     column(11, offset = 0, conditionalPanel(condition = "input.state != 'FL'",
+                                                                              checkboxInput("ccdf", strong("Subsidized Childcare (CCDF)"), FALSE) ) 
+                                                                            , conditionalPanel(condition = "input.state == 'FL'", checkboxInput("ccdf", strong("CCDF/SR Plus"), FALSE))
                                                                             , conditionalPanel(condition = "input.state=='AL'", h6("Alabama Child Care Assistance"))
                                                                             , conditionalPanel(condition = "input.state=='AK'", h6("PASS Program"))
                                                                             , conditionalPanel(condition = "input.state=='AZ'", h6("Child Care Assistance Program"))
@@ -2635,7 +2637,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             , conditionalPanel(condition = "input.state=='CT'", h6("Care 4 Kids"))
                                                                             , conditionalPanel(condition = "input.state=='DE'", h6("Purchase of Care"))
                                                                             # , conditionalPanel(condition = "input.state=='DC'", h6("DC Healthy Families"))
-                                                                            , conditionalPanel(condition = "input.state=='FL'", h6("School Readiness Program"))
+                                                                            # , conditionalPanel(condition = "input.state=='FL'", h6("School Readiness Program"))
                                                                             , conditionalPanel(condition = "input.state=='GA'", h6("Childcare and Parent Services (CAPS)"))
                                                                             , conditionalPanel(condition = "input.state=='HI'", h6("Child Care Connection Hawaii"))
                                                                             , conditionalPanel(condition = "input.state=='ID'", h6("Idaho Child Care Program (ICCP)"))
@@ -2651,7 +2653,6 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             , conditionalPanel(condition = "input.state=='MI'", h6("Child Development and Care (CDC)"))
                                                                             , conditionalPanel(condition = "input.state=='MN'", h6("Basic Sliding Fee Program"))
                                                                             , conditionalPanel(condition = "input.state=='MS'", h6("Child Care Payment Program"))
-                                                                            
                                                                             , conditionalPanel(condition = "input.state=='MO'", h6("Child Care Subsidy Program"))
                                                                             , conditionalPanel(condition = "input.state=='MT'", h6("Best Beginnings Child Care Scholarship Program"))
                                                                             , conditionalPanel(condition = "input.state=='NE'", h6("Child Care Subsidy Program"))
@@ -2666,11 +2667,9 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             , conditionalPanel(condition = "input.state=='OK'", h6("Child Care Subsidy"))
                                                                             , conditionalPanel(condition = "input.state=='OR'", h6("Employment-Related Day Care (ERDC)"))
                                                                             , conditionalPanel(condition = "input.state=='PA'", h6("Child Care Works Subsidized Child Care"))
-                                                                            
                                                                             , conditionalPanel(condition = "input.state=='RI'", h6("Child Care Assistance Program"))
                                                                             , conditionalPanel(condition = "input.state=='SC'", h6("SC Voucher Program"))
                                                                             , conditionalPanel(condition = "input.state=='SD'", h6("Child Care Assistance Program"))
-                                                                            
                                                                             , conditionalPanel(condition = "input.state=='TN'", h6("Child Care Payment Assistance"))
                                                                             , conditionalPanel(condition = "input.state=='TX'", h6("Workforce Solutions Child Care"))
                                                                             , conditionalPanel(condition = "input.state=='UT'", h6("Child Care Assistance"))
@@ -2681,19 +2680,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                             , conditionalPanel(condition = "input.state=='WI'", h6("Wisconsin Shares Child Care"))
                                                                             , conditionalPanel(condition = "input.state=='WY'", h6("Child Care Subsidy Program"))
                                                                             
-                                                                            
-                                                                            
-                                                                            
-                                                                            
-                                                                            
-                                                                            
-                                                                            
-                                                                            
-                                                                            
-                                                                     )
-                                                                     
-                                                                     ,column(11,offset=0, conditionalPanel(condition = "input.ccdf==true & input.state=='FL' & (input.county_main=='Martin County' | input.county_main=='St. Lucie County')"
-                                                                                                          , checkboxInput("fates", strong("This program includes FATES"), FALSE)))
+                                                                          )
                                                                      
                                                                    )
                                                                    
@@ -2744,18 +2731,22 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    
                                                                    ,conditionalPanel(condition = "input.state=='DC'"
                                                                                      ,checkboxInput("careerMap", strong("I am a Career MAP Participant"), FALSE)
-                                                                                     
                                                                                      ,br()
                                                                    )
                                                                    
+                                                                   ,conditionalPanel(condition = "input.state=='DC'"
+                                                                                     ,checkboxInput("DCflex", strong("I am a DC Flex Participant"), FALSE)
+                                                                                     ,br()
+                                                                   )
                                                                    
-                                                                   ,conditionalPanel(condition = "input.state=='DC' & ((input.frsp == true & input.section8 == true)
-                                                                                    | (input.careerMap == true & input.section8 == true) | (input.frsp == true & input.careerMap == true))",
+                                                                   ,conditionalPanel(condition = "input.state=='DC' & ((input.section8 == true & (input.frsp == true 
+                                                                                     | input.careerMap == true | input.DCflex == true)) | (input.frsp == true & (input.careerMap == true
+                                                                                     | input.DCflex == true)) | (input.careerMap == true & input.DCflex == true))",
                                                                                      h4(span(textOutput("error_frsp"), style="color:red"))
                                                                                      ,br()
                                                                    )
                                                                    
-                                                                   #f  ,br()
+                                                                   #br()
                                                                    
                                                                    #special programs for some areas
                                                                    
@@ -2838,7 +2829,7 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                                                                
                                                                                                                h6("Note: Many types of income are assumed to be $0 for the purposes of calculating SSI. See FAQ tab for details.")
                                                                                                                
-                                                                                             ),
+                                                                                             )
                                                                             ))
                                                                    )
                                                                    
@@ -6243,6 +6234,29 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                             
                    ),
                    
+
+                  #-------------------------------------------------------------------------------- 
+                  # tab panel 6 - Download table for screen reader
+                  #-------------------------------------------------------------------------------- 
+                  tabPanel("Download Tables", icon = icon("angle-double-right", lib = "font-awesome"),
+         
+                            tags$div(class = "container",
+                            br(),
+                            br(),
+                            br(),
+                            br(),
+                            tags$div(align = "center",
+                                tags$h4("Click 'Download Tables (screen reader)' to download the results for use with a screen reader."),
+                               
+                                br(),
+                                br(),
+                                downloadButton("print1", "Download Tables (screen reader)", # download results spreadsheet 
+                                           style="background-color: rgb(20,68,104); border-color: rgb(20,68,104)",
+                                           class="btn btn-primary btn-sm")
+                            )
+                      )
+                    ),
+                    
                    #-------------------------------------------------------------------------------- 
                    # tab panel  - FAQ 
                    #-------------------------------------------------------------------------------- 
