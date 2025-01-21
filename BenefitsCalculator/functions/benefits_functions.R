@@ -1022,7 +1022,7 @@ function.careerMap<-function(data, data_init){
   careerMapLength <- 3  # years careermap lasts
   
   temp <-data[data$Year %in% seq(minYear, minYear + careerMapLength), ]
- 
+  
   tempTanf <-left_join(temp, tanfData, by=c("stateFIPS", "famsize")) # get the Max benefit since DC wants us to always use max amount possible
   tempSnap <-left_join(temp, snapData, by=c("ruleYear","stateFIPS", "famsize")) # get the Max benefit since DC wants us to always use max amount possible
   
@@ -1057,6 +1057,7 @@ function.careerMap<-function(data, data_init){
   temp$value.section8<-temp$value.section8+temp$hhf_tanf_rent
   
   # Childcare expense HHF, applied only if receiving CCDF
+  
   if(any(temp$value.CCDF > 0) == TRUE) {
     temp$hhf_childcare_full<-rowMaxs(cbind(temp$netexp.childcare,0)) # full HHF
   } else { temp$hhf_childcare_full <- 0 }
@@ -2829,12 +2830,76 @@ function.localinctax<-function(data
 function.fedctc<-function(data
                             , incomevar
                             , totalfederaltaxvar){
+  
+  # Replace ruleYear > 2025 with 2025, you need to replace these numbers with the 
+  # most recent rule year
+  if ("ruleYear" %in% colnames(data)) {
+    data$ruleYear[data$ruleYear > 2025] <- 2025
+  }
 
     data<-data %>%
       rename("income.base" = incomevar
              ,"totalfederaltax" = totalfederaltaxvar)
 
     data$value.fedctc<-0
+    
+    #Add new Federal CTC ruleYear code below
+    
+    if(2025 %in% unique(data$ruleYear)){ # make sure that year is in the list
+      
+      temp<-data[data$ruleYear==2025,]
+      
+      temp<-left_join(temp, fedctcData, by=c("ruleYear", "FilingStatus"))
+      
+      # Calculate number of eligible dependents
+      temp$numkidsunder17=rowSums(cbind(temp$agePerson1, temp$agePerson2, temp$agePerson3, temp$agePerson4, temp$agePerson5, temp$agePerson6, temp$agePerson7, temp$agePerson8, temp$agePerson9, temp$agePerson10, temp$agePerson11, temp$agePerson12)<=temp$AgeofDependentMax & cbind(temp$agePerson1, temp$agePerson2, temp$agePerson3, temp$agePerson4, temp$agePerson5, temp$agePerson6, temp$agePerson7, temp$agePerson8, temp$agePerson9, temp$agePerson10, temp$agePerson11, temp$agePerson12)>=temp$AgeofDependentMin, na.rm=TRUE)
+      
+      # Case 1: Income below phase-in threshold
+      subset1<-temp$income.base<=temp$IncomeBin1Max
+      
+      temp$value.fedctc.refundable[subset1]<-0
+      temp$value.fedctc.nonrefundable[subset1]<-0
+      
+      # Case 2: Income between phase-in and phase-out thresholds, no tax liability
+      subset2<-temp$income.base>temp$IncomeBin1Max & temp$income.base<=temp$IncomeBin2Max & temp$totalfederaltax<=0
+      
+      temp$value.fedctc.refundable[subset2]<-rowMins(cbind(temp$PhaseInRefundability[subset2]*(temp$income.base[subset2]-temp$IncomeBin1Max[subset2]),
+                                                           temp$numkidsunder17[subset2]*temp$RefundableCredit[subset2]))
+      temp$value.fedctc.nonrefundable[subset2]<-0
+      
+      # Case 3: Income between phase-in and phase-out thresholds, positive tax liability below max total CTC credit
+      subset3<-temp$income.base>temp$IncomeBin1Max & temp$income.base<=temp$IncomeBin2Max & temp$totalfederaltax>0 & temp$totalfederaltax<(temp$IncomeBin2Max*temp$numkidsunder17)
+      
+      temp$value.fedctc.refundable[subset3]<-rowMins(cbind(rowMins(cbind(temp$PhaseInRefundability[subset3]*(temp$income.base[subset3]-temp$IncomeBin1Max[subset3]),
+                                                                         temp$numkidsunder17[subset3]*temp$RefundableCredit[subset3])),
+                                                           (temp$CreditBin1[subset3]*temp$numkidsunder17[subset3])-temp$totalfederaltax[subset3]))
+      temp$value.fedctc.nonrefundable[subset3]<-temp$totalfederaltax[subset3]
+      
+      # Case 4: Income between phase-in and phase-out thresholds, tax liability above max total CTC credit
+      subset4<-temp$income.base>temp$IncomeBin1Max & temp$income.base<=temp$CreditBin1 & temp$totalfederaltax>=(temp$RefundableCredit*temp$numkidsunder17)
+      
+      temp$value.fedctc.refundable[subset4]<-0
+      temp$value.fedctc.nonrefundable[subset4]<-rowMaxs(cbind(temp$numkidsunder17[subset4]*temp$RefundableCredit[subset4],0))
+      
+      # Case 5: Income above phase-out threshold
+      subset5<-temp$income.base>temp$IncomeBin2Max
+      
+      temp$value.fedctc.refundable[subset5]<-0
+      temp$value.fedctc.nonrefundable[subset5]<-rowMaxs(cbind(temp$CreditBin1[subset5]-(temp$income.base[subset5]-temp$IncomeBin2Max[subset5])*temp$PhaseOutSlope1[subset5],0))
+      
+      # Add refundable and non-refundable portions of CTC
+      temp$value.fedctc<-rowMaxs(cbind(temp$value.fedctc.refundable+temp$value.fedctc.nonrefundable, 0), na.rm=TRUE)
+      
+      # Make sure the variables names are the same
+      temp<-temp %>%
+        select(colnames(data),"value.fedctc")
+      
+      # Merge back
+      data[data$ruleYear==2025,]<-temp
+      
+      
+    }
+    
 
     if(2024 %in% unique(data$ruleYear)){ # make sure that year is in the list
 

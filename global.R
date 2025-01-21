@@ -254,7 +254,7 @@ line_colors <- c("#661100", "#E69F00")
 line_colors2 <- c("#E69F00","#661100")
 # Global parameters for lifetime projections
 # Lifetime horizon is fixed
-current_year <- 2024 #as.numeric(format(Sys.Date(), "%Y"))
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
 #years<-seq(current_year,current_year+25, by=1)
 years<-seq(current_year,2100, by=1)
 
