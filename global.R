@@ -1670,7 +1670,6 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   names(d)[names(d)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
   names(d)[names(d)=="value.hhf"] <- "Career MAP Income Support"
   names(d)[names(d)=="value.assistance.other"] <- "Wraparound Support"
-  names(d)[names(d)=="value.dcflex"] <- "DC Flex"
   
   if ("Career MAP - Housing" %in% benefitslist){
     names(d)[names(d)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
@@ -1682,19 +1681,7 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
     names(d)[names(d)=="Section 8 Housing Voucher"] <- "RAP"
   }      
   
-  d2<-subset(d, select = c("total.transfers"))
-  d <- subset(d, select = c("agePerson1", "year.index", "CareerPath",
-                            benefitslist, "c"))
-
-  
-  benefits.decomp <- melt(d, id.vars=c("agePerson1", "year.index", "CareerPath","c"),
-                          variable.name="Program",value.name="Transfer")
-  
-  benefits.decomp$Transfer <- replace(benefits.decomp$Transfer, benefits.decomp$Transfer==0, NA)
-  #benefits.decomp <- benefits.decomp[is.na(benefits.decomp$Transfer) == FALSE, ]
-  benefits.decomp$Program <- droplevels(benefits.decomp$Program)
-  
-  
+ 
   ########################
   # CHART   
   ########################
@@ -1708,7 +1695,7 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
                       "Earned Income Tax Credit (EITC)"="#888888", "Child Tax Credit (CTC)"="#44AA99", 
                       "Child and Dependent Care Tax Credit (CDCTC)"="#F0E442", "Wraparound Support"="#661100",
                       "Supplemental Security Income (SSI)"="red3","Social Security Disability Insurance (SSDI)"="turquoise4", 
-                      "Career MAP Income Support"="#0000CD", "DC Flex"="#800080")
+                      "Career MAP Income Support"="#0000CD")
   
   if ("Career MAP - Housing" %in% benefitslist){
     names(d)[names(d)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
@@ -1726,7 +1713,19 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
     benefit_colors <- c(benefit_colors,"Section 8 Housing Voucher"="#CC79A7")
   }
   
+  d2<-subset(d, select = c("total.transfers"))
+  d <- subset(d, select = c("agePerson1", "year.index", "CareerPath",
+                            benefitslist, "c"))
   
+  
+  benefits.decomp <- melt(d, id.vars=c("agePerson1", "year.index", "CareerPath","c"),
+                          variable.name="Program",value.name="Transfer")
+  
+  benefits.decomp$Transfer <- replace(benefits.decomp$Transfer, benefits.decomp$Transfer==0, NA)
+  benefits.decomp <- benefits.decomp[is.na(benefits.decomp$Transfer) == FALSE, ]
+  benefits.decomp$Program <- droplevels(benefits.decomp$Program)
+  
+
   ####################
   ## plot stacked bar chart  
   ####################
@@ -4826,7 +4825,6 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   names(data)[names(data)=="value.ssi"] <- "Supplemental Security Income (SSI)"
   names(data)[names(data)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
   names(data)[names(data)=="value.hhf"] <- "Career MAP Income Support"
-  names(data)[names(data)=="value.dcflex"] <- "DC Flex"
   names(data)[names(data)=="value.assistance.other"] <- "Wraparound Support"
   names(dataInit)[names(dataInit)=="value.medicaid.adult"] <- "Medicaid for Adults"
   names(dataInit)[names(dataInit)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
@@ -4854,7 +4852,6 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   names(dataInit)[names(dataInit)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
   names(dataInit)[names(dataInit)=="value.hhf"] <- "Career MAP Income Support"
   names(dataInit)[names(dataInit)=="value.assistance.other"] <- "Wraparound Support"
-  names(dataInit)[names(dataInit)=="value.dcflex"] <- "DC Flex"
   if ("Career MAP - Housing" %in% benefitslist){
     names(data)[names(data)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
     names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
@@ -4868,23 +4865,19 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
     names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "RAP"
   }      
 
+  dataInit_selected <- filter(dataInit, Year==current_year) %>% subset(select=c(benefitslist))
+  data_selected <- filter(data, year.index %in% seq(1,horizon)) %>% subset(select=c(benefitslist))
+  df <- rbind(dataInit_selected,data_selected)
 
-  table<-data.frame(matrix(0, nrow=length(benefitslist), ncol=horizon+1))
-  
-  rownames(table) <- benefitslist
+  for (program in benefitslist) {
+    if (all(df[program] == 0))
+      df[program] <- NULL
+  }
+  table <- data.frame(t(df))
   colnames(table)[1] <- "Current Job"
   colnames(table)[2] <- "New Path: Year 1"
   for (j in 2:horizon){
     colnames(table)[j+1] <- paste("Year", j)
-  }
-  
-  dataInit_selected <- subset(dataInit, select = c(benefitslist, "Year"))  %>%
-    filter(Year==current_year) 
-  for (i in 1:length(benefitslist)){
-    table[i,1] <- dataInit_selected[i]
-    data_selected <- subset(data, select = c(benefitslist[i], "year.index")) %>%
-      filter(year.index %in% seq(1,horizon))
-    table[i,1:horizon+1] <- data_selected[,1]
   }
   
   table <- format(round(table,0), big.mark=",")
@@ -5920,28 +5913,6 @@ function.storeSSvalues<-function(data){
 }
 xxxxx <<- 30
 
-#-----------------------------------------------------------------------
-# Calculate DC Flex benefit values
-function.DCFlex<-function(data){
-  dc_mfi <- read_csv('2024/DC_median_family_income_2024.csv', show_col_types = FALSE)
-  
-  # DC Flex available for up to 5 years only
-  years<-unique(data$Year)
-  minYear<-min(years)
-  dcFlexLength <- 4  # years DC Flex lasts
-  
-  # $8,400 per year up to 5 years if income not being more than 40% of Median Family Income
-  temp <- filter(data, data$Year %in% seq(minYear, minYear+dcFlexLength))
-  fam_size <- ifelse(temp$famsize[1] < dc_mfi$Household_Size[nrow(dc_mfi)], temp$famsize[1], dc_mfi$Household_Size[nrow(dc_mfi)])
-  threshold <- 0.4*dc_mfi$Median_Family_Income[dc_mfi$Household_Size == fam_size]
-  temp$value.dcflex[temp$income <= threshold] <- 8400
-  
-  data$value.dcflex <- 0
-  subset <- data$Year %in% seq(minYear, minYear+dcFlexLength)
-  data$value.dcflex[subset] <- temp$value.dcflex
-  
-  return(data)
-}
   
 #-----------------------------------------------------------------------
 # Text for "My Budget"
@@ -6114,8 +6085,6 @@ table.Summary <- function(data, dataInit, benefitslist, horizon){
     names(data)[names(data)=="Section 8 Housing Voucher"] <- "RAP"
     names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "RAP"
   }      
-  
-  names(data)[names(data)=="value.dcflex"] <- "DC Flex"
   
   
   df <- filter(data, data$year.index %in% seq(1,horizon))  %>% 

@@ -1418,6 +1418,12 @@ shinyServer(function(input, output, session) {
       # Public Assistance Programs
       #---------------------------------------------------------------------------
       benefitslist<-c()
+      programs.section8 <- FALSE
+      programs.rap <- FALSE 
+      programs.frsp <- FALSE
+      programs.careermap <- FALSE
+      frsp_share<-0
+      
       #programs.healthcare<-isolate(as.logical(input$healthcare))
       programs.medicaid_adults<-isolate(as.logical(input$medicaid_adults))
       if (programs.medicaid_adults)
@@ -1477,59 +1483,58 @@ shinyServer(function(input, output, session) {
      #   programs.ssdi <- FALSE
     #    programs.ssi <- FALSE
     #  }
-     
-      frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (participants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
-      careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (participants pay 30% of their income towards rent)
-      programs.rap <- isolate(as.logical(input$rap))
-      programs.dcflex <- isolate(as.logical(input$DCflex))
-      programs.frsp<<-FALSE
-      programs.careermap<<-FALSE
-
-      if(careerMap==TRUE & frsp==FALSE){ # If Career MAP is choosen, then set FRSP to true and share of income paid towards rent to 30%
-        programs.frsp<-TRUE
-        programs.careermap<<-TRUE
-        frsp_share<-0.3 # Assume Career MAP share of 30%
+      
+      if(state == "CT"){
+        programs.rap <- isolate(as.logical(input$rap))
+        if (programs.rap == TRUE & programs.section8 == TRUE){
+          programs.section8 <- TRUE
+          programs.rap <- FALSE
+        }
       }
+      
+      if(state == "DC"){
+        frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (participants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
+        careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (participants pay 30% of their income towards rent)
+        if(careerMap==TRUE & frsp==FALSE){ # If Career MAP is choosen, then set FRSP to true and share of income paid towards rent to 30%
+          programs.frsp<-TRUE
+          programs.careermap<-TRUE
+          frsp_share<-0.3 # Assume Career MAP share of 30%
+          programs.section8<-FALSE
+        }
 
 
-      if(careerMap==FALSE & frsp==TRUE){ # If FRSP is chosen, then set FRSP to true and share of income paid towards rent to 40%; ER 9/20/23: DC changed the program so that FRSP share is not 30%
-        programs.frsp<-TRUE
-        frsp_share<-0.3
+        if(careerMap==FALSE & frsp==TRUE){ # If FRSP is chosen, then set FRSP to true and share of income paid towards rent to 40%; ER 9/20/23: DC changed the program so that FRSP share is not 30%
+          programs.frsp<-TRUE
+          frsp_share<-0.3
+        }
+
+        if(careerMap==TRUE & frsp==TRUE){ # If both set to true - user error. Assume Career MAP
+          programs.frsp<-TRUE
+          programs.careermap<-TRUE
+          frsp_share<-0.3 # Assume Career MAP share of 30%
+          programs.section8<-FALSE
+        }
+
+        if(careerMap==FALSE & frsp==FALSE){ # If both set to false, then no program is applied
+          programs.frsp<-FALSE
+          frsp_share<-0
+        }
+
+
+        if(frsp==TRUE & programs.section8 == TRUE){ # These programs are mutually exclusive
+          programs.frsp <- TRUE
+          programs.section8<-FALSE
+        }
       }
-
-      if(careerMap==TRUE & frsp==TRUE){ # If both set to true - user error. Assume Career MAP
-        programs.frsp<-TRUE
-        programs.careermap<<-TRUE
-        frsp_share<-0.3 # Assume Career MAP share of 30%
-      }
-
-      if(careerMap==FALSE & frsp==FALSE){ # If both set to false, then no program is applied
-        programs.frsp<-FALSE
-        frsp_share<-0
-      }
-
-
-      if(frsp==TRUE & (programs.section8 == TRUE | programs.rap == TRUE)){ # These programs are mutually exclusive
-        programs.frsp <- TRUE
-        programs.section8<-FALSE
-        programs.rap<-FALSE
-      }
-
-      if(programs.rap == TRUE & programs.section8 == TRUE){
-        programs.section8 <- TRUE
-        programs.rap <- FALSE
-      }
-
+      
       if (programs.section8)
         benefitslist<-c(benefitslist,"Section 8 Housing Voucher")
       else if (programs.rap)
         benefitslist<-c(benefitslist,"RAP")
-      else if (careerMap)
+      else if (programs.careermap)
         benefitslist<-c(benefitslist,"Career MAP - Housing","Career MAP Income Support")
-      else if (frsp)
+      else if (programs.frsp)
         benefitslist<-c(benefitslist,"FRSP")
-      else if (programs.dcflex)
-        benefitslist<-c(benefitslist,"DC Flex")
       
       # Initial/Continuous Eligibility
       contelig.headstart <- isolate(as.logical(input$headstart_cont))
@@ -2920,14 +2925,6 @@ shinyServer(function(input, output, session) {
       data_init<-function.createVars.CLIFF(data_init)
       data_earned_init <- function.createVars.CLIFF(data_earned_init)
       
-      if (programs.dcflex==TRUE){
-        data_init <- function.DCFlex(data_init)  
-        data_init$netexp.rentormortgage <- data_init$netexp.rentormortgage - data_init$value.dcflex
-        data_init$netexp.housing <- data_init$netexp.housing - data_init$value.dcflex
-        data_init$total.transfers <- data_init$total.transfers + data_init$value.dcflex
-        data_init$NetResources <- data_init$NetResources + data_init$value.dcflex
-      }
-
       #data_init$total.transfers <- data_init$total.transfers + data_init$value.section8
 
 
@@ -2997,7 +2994,6 @@ shinyServer(function(input, output, session) {
 
 
 
-
         data_1<-BenefitsCalculator.OtherBenefits(data_1, APPLY_TANF=programs.tanf, APPLY_SSDI=programs.ssdi, APPLY_SSI=programs.ssi)
         data_1<-BenefitsCalculator.Childcare(data_1, APPLY_CHILDCARE, APPLY_HEADSTART=programs.head_start, APPLY_PREK=programs.prek, APPLY_CCDF=programs.ccdf, APPLY_FATES=programs.fates, contelig.ccdf = `contelig.ccdf`,contelig.headstart = `contelig.headstart`, contelig.earlyheadstart = `contelig.earlyheadstart`) #option to add APPLY_FATES
         data_1<-BenefitsCalculator.Healthcare(data_1, APPLY_HEALTHCARE=TRUE, APPLY_MEDICAID_ADULT = programs.medicaid_adults, APPLY_MEDICAID_CHILD = programs.medicaid_child, APPLY_ACA = programs.aca)
@@ -3037,13 +3033,6 @@ shinyServer(function(input, output, session) {
         data_1$total.transfers <- data_1$total.transfers + data_1$value.hhf #+ data_1$value.section8
         data_1$NetResources <- data_1$NetResources + data_1$value.hhf #+ data_1$value.section8
 
-        if (programs.dcflex==TRUE){
-          data_1 <- function.DCFlex(data_1)  
-          data_1$netexp.rentormortgage <- data_1$netexp.rentormortgage - data_1$value.dcflex
-          data_1$netexp.housing <- data_1$netexp.housing - data_1$value.dcflex
-          data_1$total.transfers <- data_1$total.transfers + data_1$value.dcflex
-          data_1$NetResources <- data_1$NetResources + data_1$value.dcflex
-        }
         data_one <<- data_1 # output data to global environment
 
       }
@@ -3152,14 +3141,7 @@ shinyServer(function(input, output, session) {
         data_2$total.transfers <- data_2$total.transfers + data_2$value.hhf #+ data_2$value.section8
         data_2$NetResources <- data_2$NetResources + data_2$value.hhf #+ data_2$value.section8
 
-        if (programs.dcflex==TRUE){
-          data_2 <- function.DCFlex(data_2)  
-          data_2$netexp.rentormortgage <- data_2$netexp.rentormortgage - data_2$value.dcflex
-          data_2$netexp.housing <- data_2$netexp.housing - data_2$value.dcflex
-          data_2$total.transfers <- data_2$total.transfers + data_2$value.dcflex
-          data_2$NetResources <- data_2$NetResources + data_2$value.dcflex
-        }
-            data_two <<- data_2 # output to global environment
+        data_two <<- data_2 # output to global environment
 
       }
 
