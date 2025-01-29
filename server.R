@@ -3021,7 +3021,7 @@ shinyServer(function(input, output, session) {
         data_1$value.hhf <- 0
         data_earned_1$value.hhf <- 0
 
-        if(careerMap==TRUE){
+        if(programs.careermap==TRUE){
           data_1<-function.careerMap(data_1, data_init)
         }else{data_1$value.hhf<-0}
 
@@ -3127,7 +3127,7 @@ shinyServer(function(input, output, session) {
         data_earned_2$value.hhf <- 0
 
 
-        if(careerMap==TRUE){
+        if(programs.careermap==TRUE){
           data_2<-function.careerMap(data_2, data_init)
         }else{data_2$value.hhf<-0}
 
