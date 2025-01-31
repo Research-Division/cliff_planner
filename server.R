@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$error_frsp <- renderText({
-    "Warning: Section 8 cannot be chosen with either the FRSP or CareerMAP programs. Please select one program."
+    "Warning: Section 8, FRSP, CareerMAP and DC Flex are mutually exclusive programs. Please select one program."
   })
 
   output$error_family_age <- renderText({
@@ -1418,6 +1418,12 @@ shinyServer(function(input, output, session) {
       # Public Assistance Programs
       #---------------------------------------------------------------------------
       benefitslist<-c()
+      programs.section8 <- FALSE
+      programs.rap <- FALSE 
+      programs.frsp <- FALSE
+      programs.careermap <- FALSE
+      frsp_share<-0
+      
       #programs.healthcare<-isolate(as.logical(input$healthcare))
       programs.medicaid_adults<-isolate(as.logical(input$medicaid_adults))
       if (programs.medicaid_adults)
@@ -1438,12 +1444,14 @@ shinyServer(function(input, output, session) {
       if (programs.wic)
         benefitslist<-c(benefitslist,"Women, Infants and Children Nutrition Program (WIC)")
       programs.ccdf<-isolate(as.logical(input$ccdf))
-      if (programs.ccdf)
-        benefitslist<-c(benefitslist,"Child Care Subsidy (CCDF)")
+      if (programs.ccdf) {
+        if (inputs$stateAbbrev == "FL")
+          benefitslist<-c(benefitslist,"CCDF/SR Plus")
+        else
+          benefitslist<-c(benefitslist,"Child Care Subsidy (CCDF)")
+      }
       programs.ccdf_cont<-isolate(as.logical(input$ccdf_cont))
-      programs.fates<-isolate(as.logical(input$fates))
-      if (programs.fates)
-        benefitslist<-c(benefitslist,"FATES")
+      programs.fates<-FALSE 
       programs.head_start<-isolate(as.logical(input$head_start))
       if (programs.head_start)
         benefitslist<-c(benefitslist,"Head Start")
@@ -1475,55 +1483,57 @@ shinyServer(function(input, output, session) {
      #   programs.ssdi <- FALSE
     #    programs.ssi <- FALSE
     #  }
-     
-      frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (partitipants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
-      careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (partitipants pay 30% of their income towards rent)
-      programs.rap <- isolate(as.logical(input$rap))
-      programs.frsp<<-FALSE
-      programs.careermap<<-FALSE
-
-      if(careerMap==TRUE & frsp==FALSE){ # If Career MAP is choosen, then set FRSP to true and share of income paid towards rent to 30%
-        programs.frsp<-TRUE
-        programs.careermap<<-TRUE
-        frsp_share<-0.3 # Assume Career MAP share of 30%
+      
+      if(state == "CT"){
+        programs.rap <- isolate(as.logical(input$rap))
+        if (programs.rap == TRUE & programs.section8 == TRUE){
+          programs.section8 <- TRUE
+          programs.rap <- FALSE
+        }
       }
+      
+      if(state == "DC"){
+        frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (participants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
+        careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (participants pay 30% of their income towards rent)
+        if(careerMap==TRUE & frsp==FALSE){ # If Career MAP is choosen, then set FRSP to true and share of income paid towards rent to 30%
+          programs.frsp<-TRUE
+          programs.careermap<-TRUE
+          frsp_share<-0.3 # Assume Career MAP share of 30%
+          programs.section8<-FALSE
+        }
 
 
-      if(careerMap==FALSE & frsp==TRUE){ # If FRSP is chosen, then set FRSP to true and share of income paid towards rent to 40%; ER 9/20/23: DC changed the program so that FRSP share is not 30%
-        programs.frsp<-TRUE
-        frsp_share<-0.3
+        if(careerMap==FALSE & frsp==TRUE){ # If FRSP is chosen, then set FRSP to true and share of income paid towards rent to 40%; ER 9/20/23: DC changed the program so that FRSP share is not 30%
+          programs.frsp<-TRUE
+          frsp_share<-0.3
+        }
+
+        if(careerMap==TRUE & frsp==TRUE){ # If both set to true - user error. Assume Career MAP
+          programs.frsp<-TRUE
+          programs.careermap<-TRUE
+          frsp_share<-0.3 # Assume Career MAP share of 30%
+          programs.section8<-FALSE
+        }
+
+        if(careerMap==FALSE & frsp==FALSE){ # If both set to false, then no program is applied
+          programs.frsp<-FALSE
+          frsp_share<-0
+        }
+
+
+        if(frsp==TRUE & programs.section8 == TRUE){ # These programs are mutually exclusive
+          programs.frsp <- TRUE
+          programs.section8<-FALSE
+        }
       }
-
-      if(careerMap==TRUE & frsp==TRUE){ # If both set to true - user error. Assume Career MAP
-        programs.frsp<-TRUE
-        programs.careermap<<-TRUE
-        frsp_share<-0.3 # Assume Career MAP share of 30%
-      }
-
-      if(careerMap==FALSE & frsp==FALSE){ # If both set to false, then no program is applied
-        programs.frsp<-FALSE
-        frsp_share<-0
-      }
-
-
-      if(frsp==TRUE & (programs.section8 == TRUE | programs.rap == TRUE)){ # These programs are mutually exclusive
-        programs.frsp <- TRUE
-        programs.section8<-FALSE
-        programs.rap<-FALSE
-      }
-
-      if(programs.rap == TRUE & programs.section8 == TRUE){
-        programs.section8 <- TRUE
-        programs.rap <- FALSE
-      }
-
+      
       if (programs.section8)
         benefitslist<-c(benefitslist,"Section 8 Housing Voucher")
       else if (programs.rap)
         benefitslist<-c(benefitslist,"RAP")
-      else if (careerMap)
+      else if (programs.careermap)
         benefitslist<-c(benefitslist,"Career MAP - Housing","Career MAP Income Support")
-      else if (frsp)
+      else if (programs.frsp)
         benefitslist<-c(benefitslist,"FRSP")
       
       # Initial/Continuous Eligibility
@@ -2893,40 +2903,28 @@ shinyServer(function(input, output, session) {
 
       inputs <<- inputs
 
-    yyyyy <<- 1
-
       data_init<-BenefitsCalculator.OtherBenefits(data_init, APPLY_TANF=programs.tanf, APPLY_SSDI=programs.ssdi, APPLY_SSI=programs.ssi)
       data_init<-BenefitsCalculator.Childcare(data_init, APPLY_CHILDCARE, APPLY_HEADSTART=programs.head_start, APPLY_PREK=programs.prek, APPLY_CCDF=programs.ccdf, APPLY_FATES=programs.fates, contelig.ccdf = `contelig.ccdf`,contelig.headstart = `contelig.headstart`, contelig.earlyheadstart = `contelig.earlyheadstart`) #option to add APPLY_FATES
       data_init<-BenefitsCalculator.Healthcare(data_init, APPLY_HEALTHCARE=TRUE, APPLY_MEDICAID_ADULT = programs.medicaid_adults, APPLY_MEDICAID_CHILD = programs.medicaid_child, APPLY_ACA = programs.aca)
       data_init<-BenefitsCalculator.FoodandHousing(data_init, APPLY_SECTION8=programs.section8, APPLY_LIHEAP, APPLY_SNAP=programs.snap, APPLY_SLP=programs.schoolMeals, APPLY_WIC=programs.wic, APPLY_RAP=programs.rap, APPLY_FRSP = programs.frsp, frsp_share = `frsp_share`, CareerMAP = programs.careermap) # OPTION TO END WITH APPLY_RAP
 
-      yyyyy <<- 2
-      
       data_earned_init <- data_init
       data_earned_init$income <- data_earned_init$income - data_earned_init$income.investment - data_earned_init$income.child_support
       data_earned_init$income.investment <- 0
       data_earned_init$income.child_support <- 0
       data_earned_init$income.gift <- 0
       
-      yyyyy <<- 3
-
       data_init<-BenefitsCalculator.TaxesandTaxCredits(data_init, APPLY_EITC=programs.eitc, APPLY_CTC=programs.ctc, APPLY_CDCTC=programs.cdctc)
       data_earned_init<-BenefitsCalculator.TaxesandTaxCredits(data_earned_init, APPLY_EITC=programs.eitc, APPLY_CTC=programs.ctc, APPLY_CDCTC=programs.cdctc)
-      
-      yyyyy <<- 4
       
       data_init<-data_init %>% # Generate individual-level after-tax income
         mutate(income.aftertax.noTC_ind=case_when(income_ind-(tax.income.fed+tax.income.state+tax.FICA)>0 ~ income_ind-(tax.income.fed+tax.income.state+tax.FICA), TRUE ~0))
 
       data_init$value.hhf<-0 # iniial value of Cash Hold Harmless Fund
       
-      yyyyy <<- 5
-
       data_init<-function.createVars.CLIFF(data_init)
       data_earned_init <- function.createVars.CLIFF(data_earned_init)
       
-      yyyyy <<- 6
-
       #data_init$total.transfers <- data_init$total.transfers + data_init$value.section8
 
 
@@ -2935,7 +2933,6 @@ shinyServer(function(input, output, session) {
       
       data_init$taxedEarnedIncomeOnly <- data_earned_init$income.aftertax.noTC
       
-      yyyyy <<- 7
 
       data_initial <<- data_init
 
@@ -2997,7 +2994,6 @@ shinyServer(function(input, output, session) {
 
 
 
-
         data_1<-BenefitsCalculator.OtherBenefits(data_1, APPLY_TANF=programs.tanf, APPLY_SSDI=programs.ssdi, APPLY_SSI=programs.ssi)
         data_1<-BenefitsCalculator.Childcare(data_1, APPLY_CHILDCARE, APPLY_HEADSTART=programs.head_start, APPLY_PREK=programs.prek, APPLY_CCDF=programs.ccdf, APPLY_FATES=programs.fates, contelig.ccdf = `contelig.ccdf`,contelig.headstart = `contelig.headstart`, contelig.earlyheadstart = `contelig.earlyheadstart`) #option to add APPLY_FATES
         data_1<-BenefitsCalculator.Healthcare(data_1, APPLY_HEALTHCARE=TRUE, APPLY_MEDICAID_ADULT = programs.medicaid_adults, APPLY_MEDICAID_CHILD = programs.medicaid_child, APPLY_ACA = programs.aca)
@@ -3025,7 +3021,7 @@ shinyServer(function(input, output, session) {
         data_1$value.hhf <- 0
         data_earned_1$value.hhf <- 0
 
-        if(careerMap==TRUE){
+        if(programs.careermap==TRUE){
           data_1<-function.careerMap(data_1, data_init)
         }else{data_1$value.hhf<-0}
 
@@ -3036,7 +3032,6 @@ shinyServer(function(input, output, session) {
 
         data_1$total.transfers <- data_1$total.transfers + data_1$value.hhf #+ data_1$value.section8
         data_1$NetResources <- data_1$NetResources + data_1$value.hhf #+ data_1$value.section8
-
 
         data_one <<- data_1 # output data to global environment
 
@@ -3132,7 +3127,7 @@ shinyServer(function(input, output, session) {
         data_earned_2$value.hhf <- 0
 
 
-        if(careerMap==TRUE){
+        if(programs.careermap==TRUE){
           data_2<-function.careerMap(data_2, data_init)
         }else{data_2$value.hhf<-0}
 
@@ -3146,7 +3141,7 @@ shinyServer(function(input, output, session) {
         data_2$total.transfers <- data_2$total.transfers + data_2$value.hhf #+ data_2$value.section8
         data_2$NetResources <- data_2$NetResources + data_2$value.hhf #+ data_2$value.section8
 
-            data_two <<- data_2 # output to global environment
+        data_two <<- data_2 # output to global environment
 
       }
 
@@ -3367,6 +3362,28 @@ shinyServer(function(input, output, session) {
       })
 
       updateActionButton(session, "calculateBudget", label = "Recalculate My Budget")
+
+      # table for screen reader    
+      srtablehorizon <- 10
+      results_table <- table.Summary(rbind(data_2, data_1), data_init, benefitslist, srtablehorizon)
+      
+      # download results table for screen reader
+      output$print1 <- downloadHandler(
+        
+        filename = function(){
+          paste0("DataTables", "_ScreenReader.xlsx")
+        },
+        #filename = "CLIFF_Dashboard_Results_Summary.xlsx",
+        content = function(file){
+          # save(data, file=file)
+          # write.xlsx(data, file=file)
+          require(openxlsx)
+          #list_datasets <- list("Annual Results" = data_1, "Cross Section Results" = csdata_1, "Data Dictionary" = Data_Dictionary)
+          write.xlsx(results_table, file=file)
+          
+        }
+        
+      )
 
     }
 

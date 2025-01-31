@@ -254,7 +254,7 @@ line_colors <- c("#661100", "#E69F00")
 line_colors2 <- c("#E69F00","#661100")
 # Global parameters for lifetime projections
 # Lifetime horizon is fixed
-current_year<-as.numeric(format(Sys.Date(), "%Y"))
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
 #years<-seq(current_year,current_year+25, by=1)
 years<-seq(current_year,2100, by=1)
 
@@ -1649,7 +1649,10 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   names(d)[names(d)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
   names(d)[names(d)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
   names(d)[names(d)=="value.section8"] <- "Section 8 Housing Voucher"
-  names(d)[names(d)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  if (d$stateAbbrev[1] == "FL") 
+    names(d)[names(d)=="value.CCDF"] <- "CCDF/SR Plus"
+  else
+    names(d)[names(d)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
   names(d)[names(d)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
   names(d)[names(d)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
   names(d)[names(d)=="value.ctc"] <- "Child Tax Credit (CTC)"
@@ -1678,19 +1681,7 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
     names(d)[names(d)=="Section 8 Housing Voucher"] <- "RAP"
   }      
   
-  d2<-subset(d, select = c("total.transfers"))
-  d <- subset(d, select = c("agePerson1", "year.index", "CareerPath",
-                            benefitslist, "c"))
-
-  
-  benefits.decomp <- melt(d, id.vars=c("agePerson1", "year.index", "CareerPath","c"),
-                          variable.name="Program",value.name="Transfer")
-  
-  benefits.decomp$Transfer <- replace(benefits.decomp$Transfer, benefits.decomp$Transfer==0, NA)
-  #benefits.decomp <- benefits.decomp[is.na(benefits.decomp$Transfer) == FALSE, ]
-  benefits.decomp$Program <- droplevels(benefits.decomp$Program)
-  
-  
+ 
   ########################
   # CHART   
   ########################
@@ -1699,12 +1690,12 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   benefit_colors <- c("Medicaid for Adults"="#332288", "Medicaid for Children/CHIP"="#E69F00", "Health Insurance Marketplace Subsidy"="#117733", 
                       "Temporary Assistance for Needy Families (TANF)"="#0072B2", #"Section 8 Housing Voucher"="#CC79A7", "LIHEAP"="#CC6677", 
                       "Supplemental Nutrition Assistance Program (SNAP)"="#D55E00", "Women, Infants and Children Nutrition Program (WIC)"="#AA4499", 
-                      "Free or Reduced Price School Meals"="#999933", "Child Care Subsidy (CCDF)"="#882255", "FATES"="medium blue", 
+                      "Free or Reduced Price School Meals"="#999933", "Child Care Subsidy (CCDF)"="#882255", "CCDF/SR Plus"="#882255",
                       "Head Start" = "#88CCEE", "Early Head Start" = "light green", "State-Funded Pre-Kindergarten" = "black", 
                       "Earned Income Tax Credit (EITC)"="#888888", "Child Tax Credit (CTC)"="#44AA99", 
                       "Child and Dependent Care Tax Credit (CDCTC)"="#F0E442", "Wraparound Support"="#661100",
                       "Supplemental Security Income (SSI)"="red3","Social Security Disability Insurance (SSDI)"="turquoise4", 
-                      "Career MAP Income Support"="#deb887")
+                      "Career MAP Income Support"="#0000CD")
   
   if ("Career MAP - Housing" %in% benefitslist){
     names(d)[names(d)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
@@ -1722,7 +1713,19 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
     benefit_colors <- c(benefit_colors,"Section 8 Housing Voucher"="#CC79A7")
   }
   
+  d2<-subset(d, select = c("total.transfers"))
+  d <- subset(d, select = c("agePerson1", "year.index", "CareerPath",
+                            benefitslist, "c"))
   
+  
+  benefits.decomp <- melt(d, id.vars=c("agePerson1", "year.index", "CareerPath","c"),
+                          variable.name="Program",value.name="Transfer")
+  
+  benefits.decomp$Transfer <- replace(benefits.decomp$Transfer, benefits.decomp$Transfer==0, NA)
+  benefits.decomp <- benefits.decomp[is.na(benefits.decomp$Transfer) == FALSE, ]
+  benefits.decomp$Program <- droplevels(benefits.decomp$Program)
+  
+
   ####################
   ## plot stacked bar chart  
   ####################
@@ -4803,7 +4806,10 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   names(data)[names(data)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
   names(data)[names(data)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
   names(data)[names(data)=="value.section8"] <- "Section 8 Housing Voucher"
-  names(data)[names(data)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  if (data$stateAbbrev[1] == "FL") 
+    names(data)[names(data)=="value.CCDF"] <- "CCDF/SR Plus"
+  else
+    names(data)[names(data)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
   names(data)[names(data)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
   names(data)[names(data)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
   names(data)[names(data)=="value.ctc"] <- "Child Tax Credit (CTC)"
@@ -4816,19 +4822,20 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   names(data)[names(data)=="tax.income.state"] <- "State Income Tax"
   names(data)[names(data)=="tax.FICA"] <- "FICA Tax"
   names(data)[names(data)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
-  #names(data)[names(data)=="value.FATES"] <- "FATES"
   names(data)[names(data)=="value.ssi"] <- "Supplemental Security Income (SSI)"
   names(data)[names(data)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
   names(data)[names(data)=="value.hhf"] <- "Career MAP Income Support"
   names(data)[names(data)=="value.assistance.other"] <- "Wraparound Support"
-  
   names(dataInit)[names(dataInit)=="value.medicaid.adult"] <- "Medicaid for Adults"
   names(dataInit)[names(dataInit)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
   names(dataInit)[names(dataInit)=="value.snap"] <- "Supplemental Nutrition Assistance Program (SNAP)"
   names(dataInit)[names(dataInit)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
   names(dataInit)[names(dataInit)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
   names(dataInit)[names(dataInit)=="value.section8"] <- "Section 8 Housing Voucher"
-  names(dataInit)[names(dataInit)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  if (dataInit$stateAbbrev[1] == "FL") 
+    names(dataInit)[names(dataInit)=="value.CCDF"] <- "CCDF/SR Plus"
+  else
+    names(dataInit)[names(dataInit)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
   names(dataInit)[names(dataInit)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
   names(dataInit)[names(dataInit)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
   names(dataInit)[names(dataInit)=="value.ctc"] <- "Child Tax Credit (CTC)"
@@ -4841,12 +4848,10 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   names(dataInit)[names(dataInit)=="tax.income.state"] <- "State Income Tax"
   names(dataInit)[names(dataInit)=="tax.FICA"] <- "FICA Tax"
   names(dataInit)[names(dataInit)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
-  #names(dataInit)[names(dataInit)=="value.FATES"] <- "FATES"
   names(dataInit)[names(dataInit)=="value.ssi"] <- "Supplemental Security Income (SSI)"
   names(dataInit)[names(dataInit)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
   names(dataInit)[names(dataInit)=="value.hhf"] <- "Career MAP Income Support"
   names(dataInit)[names(dataInit)=="value.assistance.other"] <- "Wraparound Support"
- 
   if ("Career MAP - Housing" %in% benefitslist){
     names(data)[names(data)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
     names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
@@ -4860,23 +4865,19 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
     names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "RAP"
   }      
 
+  dataInit_selected <- filter(dataInit, Year==current_year) %>% subset(select=c(benefitslist))
+  data_selected <- filter(data, year.index %in% seq(1,horizon)) %>% subset(select=c(benefitslist))
+  df <- rbind(dataInit_selected,data_selected)
 
-  table<-data.frame(matrix(0, nrow=length(benefitslist), ncol=horizon+1))
-  
-  rownames(table) <- benefitslist
+  for (program in benefitslist) {
+    if (all(df[program] == 0))
+      df[program] <- NULL
+  }
+  table <- data.frame(t(df))
   colnames(table)[1] <- "Current Job"
   colnames(table)[2] <- "New Path: Year 1"
   for (j in 2:horizon){
     colnames(table)[j+1] <- paste("Year", j)
-  }
-  
-  dataInit_selected <- subset(dataInit, select = c(benefitslist, "Year"))  %>%
-    filter(Year==current_year) 
-  for (i in 1:length(benefitslist)){
-    table[i,1] <- dataInit_selected[i]
-    data_selected <- subset(data, select = c(benefitslist[i], "year.index")) %>%
-      filter(year.index %in% seq(1,horizon))
-    table[i,1:horizon+1] <- data_selected[,1]
   }
   
   table <- format(round(table,0), big.mark=",")
@@ -5912,78 +5913,7 @@ function.storeSSvalues<-function(data){
 }
 xxxxx <<- 30
 
-function.careerMap<-function(data, data_init){
   
-  # Career MAP hold harmless fund available for up to 4 years only
-  
-  #-------------------------years<-unique(data$Year)
-  minYear<-min(years)
-  careerMapLength <- 3  # years careermap lasts
-  
-  temp <-data[data$Year %in% seq(minYear, minYear + careerMapLength), ]
-
-  # Calculate initial value of selected benefits
-  temp$value.snap_max<-data_init$value.snap[1]
-  temp$value.tanf_max<-data_init$value.tanf[1]
- #  temp$netexp.childcare_min<-data_init$netexp.childcare[1]
-  # temp$netexp.healthcare_min<-data_init$netexp.healthcare[1]
-  
-  # SNAP HHF
-  temp$hhf_snap_full<-rowMaxs(cbind(temp$value.snap_max-temp$value.snap,0)) # full HHF
-  temp$hhf_snap_rent<-rowMins(cbind(temp$hhf_snap_full,temp$netexp.rentormortgage)) # rent reduction
-  temp$hhf_snap_cash<-temp$hhf_snap_full-temp$hhf_snap_rent # cash
-  
-  # Reduce rent and increase FRSP value by the amount of HHF
-  temp$netexp.rentormortgage<-temp$netexp.rentormortgage-temp$hhf_snap_rent
-  temp$value.section8<-temp$value.section8+temp$hhf_snap_rent
-  
-  #-------------------------
-  # TANF HHF
-  temp$hhf_tanf_full<-rowMaxs(cbind(temp$value.tanf_max-temp$value.tanf,0)) # full HHF
-  temp$hhf_tanf_rent<-rowMins(cbind(temp$hhf_tanf_full,temp$netexp.rentormortgage)) # rent reduction
-  temp$hhf_tanf_cash<-temp$hhf_tanf_full-temp$hhf_tanf_rent # cash
-  
-  # Reduce rent and increase FRSP value by the amount of HHF
-  temp$netexp.rentormortgage<-temp$netexp.rentormortgage-temp$hhf_tanf_rent
-  temp$value.section8<-temp$value.section8+temp$hhf_tanf_rent
-  
-  #-------------------------
-  # Childcare expense HHF, applied only if receiving CCDF
-  
-  if(any(temp$value.CCDF > 0) == TRUE) {
-  temp$hhf_childcare_full<-rowMaxs(cbind(temp$netexp.childcare,0)) # full HHF
-  } else { temp$hhf_childcare_full <- 0 }
-  
-  #-------------------------
-  # Healthcare expense HHF
-  
-  if(temp$healthcare.source[1] != "Medicaid/CHIP") {
-  temp$hhf_healthcare_full<-rowMaxs(cbind(temp$netexp.healthcare,0)) # full HHF
-  
-  # Remove out-of-pocket misc. healthcare expenses since program only covers premiums
-  temp$hhf_healthcare_full <- temp$hhf_healthcare_full - temp$oop.health.family.ALICE
-  
-  } else{temp$hhf_healthcare_full <- 0}
-  #--------------------------
-  
-  # Total value of cash HHF
-  temp$value.hhf<-temp$hhf_snap_cash+temp$hhf_tanf_cash+temp$hhf_childcare_full+temp$hhf_healthcare_full
-  
-  #  cap annual HHF at $10,000 per year.
-  temp$value.hhf <- ifelse(temp$value.hhf >= 10000, 10000, temp$value.hhf)
-  
-  # Override selected values up to 5 years
-  subset<-data$Year %in% seq(minYear, minYear + careerMapLength)
-  
-  data$netexp.rentormortgage[subset]<-temp$netexp.rentormortgage
-  data$netexp.housing[subset] <- temp$netexp.rentormortgage + temp$netexp.utilities
-  data$value.section8[subset]<-temp$value.section8
-  data$value.hhf[subset]<-temp$value.hhf
-  
-  return(data)
-  
-}
-
 #-----------------------------------------------------------------------
 # Text for "My Budget"
 textMyBudget <- function(data1, data2, selected, horizon, exp_type,inputs){
@@ -6073,4 +6003,130 @@ textMyBudget <- function(data1, data2, selected, horizon, exp_type,inputs){
   
 }
 
-xxxxx <<- 99
+# Summary Table
+table.Summary <- function(data, dataInit, benefitslist, horizon){
+  
+  # Career option was not specified
+  #validate(
+  #  need(!is.na(sum(data$income)), "The career options were not specified at the 'Choose Career' step")
+  #)
+  
+  
+  dataInit$value.assistance.other <- dataInit$value.assistance.other + dataInit$value.assistance.tax.other
+  data$value.assistance.other <- data$value.assistance.other + data$value.assistance.tax.other
+  if ((dataInit$value.assistance.other[1] > 0) | (sum(data$value.assistance.other) > 0))
+    benefitslist <- c(benefitslist,"Wraparound Support")
+  
+  
+  
+  ## Rename Factors
+  names(data)[names(data)=="value.medicaid.adult"] <- "Medicaid for Adults"
+  names(data)[names(data)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
+  names(data)[names(data)=="value.snap"] <- "Supplemental Nutrition Assistance Program (SNAP)"
+  names(data)[names(data)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
+  names(data)[names(data)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
+  names(data)[names(data)=="value.section8"] <- "Section 8 Housing Voucher"
+  if (data$stateAbbrev[1] == "FL") 
+    names(data)[names(data)=="value.CCDF"] <- "CCDF/SR Plus"
+  else
+    names(data)[names(data)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  names(data)[names(data)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
+  names(data)[names(data)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
+  names(data)[names(data)=="value.ctc"] <- "Child Tax Credit (CTC)"
+  names(data)[names(data)=="value.schoolmeals"] <- "Free or Reduced Price School Meals"
+  #names(data)[names(data)=="value.liheap"] <- "LIHEAP"
+  names(data)[names(data)=="value.HeadStart"] <- "Head Start"
+  #names(data)[names(data)=="value.earlyHeadStart"] <- "Early Head Start"
+  names(data)[names(data)=="value.PreK"] <- "State-Funded Pre-Kindergarten"
+  names(data)[names(data)=="tax.income.fed"] <- "Federal Income Tax"
+  names(data)[names(data)=="tax.income.state"] <- "State Income Tax"
+  names(data)[names(data)=="tax.FICA"] <- "FICA Tax"
+  names(data)[names(data)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
+  #names(data)[names(data)=="value.FATES"] <- "FATES"
+  names(data)[names(data)=="value.ssi"] <- "Supplemental Security Income (SSI)"
+  names(data)[names(data)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
+  names(data)[names(data)=="value.hhf"] <- "Career MAP Income Support"
+  names(data)[names(data)=="value.assistance.other"] <- "Wraparound Support"
+  names(dataInit)[names(dataInit)=="value.medicaid.adult"] <- "Medicaid for Adults"
+  names(dataInit)[names(dataInit)=="value.medicaid.child"] <- "Medicaid for Children/CHIP"
+  names(dataInit)[names(dataInit)=="value.snap"] <- "Supplemental Nutrition Assistance Program (SNAP)"
+  names(dataInit)[names(dataInit)=="value.wic"] <- "Women, Infants and Children Nutrition Program (WIC)"
+  names(dataInit)[names(dataInit)=="value.cdctc"] <- "Child and Dependent Care Tax Credit (CDCTC)"
+  names(dataInit)[names(dataInit)=="value.section8"] <- "Section 8 Housing Voucher"
+  if (dataInit$stateAbbrev[1] == "FL") 
+    names(dataInit)[names(dataInit)=="value.CCDF"] <- "CCDF/SR Plus"
+  else
+    names(dataInit)[names(dataInit)=="value.CCDF"] <- "Child Care Subsidy (CCDF)"
+  names(dataInit)[names(dataInit)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
+  names(dataInit)[names(dataInit)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
+  names(dataInit)[names(dataInit)=="value.ctc"] <- "Child Tax Credit (CTC)"
+  names(dataInit)[names(dataInit)=="value.schoolmeals"] <- "Free or Reduced Price School Meals"
+  names(dataInit)[names(dataInit)=="value.HeadStart"] <- "Head Start"
+  #names(dataInit)[names(dataInit)=="value.earlyHeadStart"] <- "Early Head Start"
+  names(dataInit)[names(dataInit)=="value.PreK"] <- "State-Funded Pre-Kindergarten"
+  names(dataInit)[names(dataInit)=="tax.income.fed"] <- "Federal Income Tax"
+  names(dataInit)[names(dataInit)=="tax.income.state"] <- "State Income Tax"
+  names(dataInit)[names(dataInit)=="tax.FICA"] <- "FICA Tax"
+  names(dataInit)[names(dataInit)=="value.tanf"] <- "Temporary Assistance for Needy Families (TANF)"
+  names(dataInit)[names(dataInit)=="value.ssi"] <- "Supplemental Security Income (SSI)"
+  names(dataInit)[names(dataInit)=="value.ssdi"] <- "Social Security Disability Insurance (SSDI)"
+  names(dataInit)[names(dataInit)=="value.hhf"] <- "Career MAP Income Support"
+  names(dataInit)[names(dataInit)=="value.assistance.other"] <- "Wraparound Support"
+  
+  if ("Career MAP - Housing" %in% benefitslist){
+    names(data)[names(data)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
+    names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "Career MAP - Housing"
+  }
+  else if ("FRSP" %in% benefitslist){
+    names(data)[names(data)=="Section 8 Housing Voucher"] <- "FRSP"
+    names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "FRSP"
+  } 
+  else if ("RAP" %in% benefitslist){
+    names(data)[names(data)=="Section 8 Housing Voucher"] <- "RAP"
+    names(dataInit)[names(dataInit)=="Section 8 Housing Voucher"] <- "RAP"
+  }      
+  
+  
+  df <- filter(data, data$year.index %in% seq(1,horizon))  %>% 
+    subset(select=c("CareerPath","Year","income","AfterTaxIncome","total.transfers","value.employerhealthcare",
+                    "total.expenses","NetResources",benefitslist)) 
+  df["total.expenses"] <- df["total.expenses"]-df["value.employerhealthcare"]
+  df["value.employerhealthcare"] <- NULL 
+  
+  df1 <- df[,c(1,2)]
+  df2 <- df[,-c(1:2)]
+  df2 <- format(round(df2,0), big.mark=",")
+  
+  df <- cbind(df1, df2)
+  for (program in benefitslist) {
+    if (all(df[program] == 0))
+      df[program] <- NULL
+  }
+  
+  names(df)[names(df)=="CareerPath"] <- "Career Path"
+  names(df)[names(df)=="income"] <- "Pre-tax Income"
+  names(df)[names(df)=="AfterTaxIncome"] <- "+ Take-home Pay"
+  names(df)[names(df)=="total.transfers"] <- "+ Public Assistance" 
+  names(df)[names(df)=="total.expenses"] <- "- Living Expenses"
+  names(df)[names(df)=="NetResources"] <- "= Annual Budget"
+  
+  
+  #summary <- data.frame(matrix(0, nrow=0, ncol=horizon))
+  #for (j in 1:horizon) {
+  #  colnames(summary)[j] <- paste("Year", j)
+  #}
+  #careerOptions <- unique(df$CareerPath)
+  #for (career in careerOptions) {
+  #  df_i = df[df$CareerPath == career,] %>% subset(select=c(-2))
+  #  subsummary = transpose(df_i)
+  #  names(df_i)[names(df_i)=="CareerPath"] <- "Career Path"
+  #  rownames(subsummary) <- colnames(df_i)
+  #  for (j in 1:horizon) {
+  #    colnames(subsummary)[j] <- paste("Year", j)
+  #  }
+  #  summary <- rbind(summary, subsummary)
+  #}
+  
+  return(df)
+  
+}
