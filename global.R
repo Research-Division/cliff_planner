@@ -1656,7 +1656,7 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   names(d)[names(d)=="value.aca"] <- "Health Insurance Marketplace Subsidy"
   names(d)[names(d)=="value.eitc"] <- "Earned Income Tax Credit (EITC)"
   names(d)[names(d)=="value.ctc"] <- "Child Tax Credit (CTC)"
-  names(d)[names(d)=="value.schoolmeals"] <- "Subsidized School Meals"
+  names(d)[names(d)=="value.schoolmeals"] <- "Free or Reduced Price School Meals"
   #names(d)[names(d)=="value.liheap"] <- "LIHEAP"
   names(d)[names(d)=="value.HeadStart"] <- "Head Start"
   #names(d)[names(d)=="value.earlyHeadStart"] <- "Early Head Start"
@@ -1681,7 +1681,7 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   else if ("RAP" %in% benefitslist){
     names(d)[names(d)=="Section 8 Housing Voucher"] <- "RAP"
   }      
-  
+ #browser() 
   d2<-subset(d, select = c("total.transfers"))
   d <- subset(d, select = c("agePerson1", "year.index", "CareerPath",
                             benefitslist, "c"))
@@ -1690,9 +1690,9 @@ transfers.budget.values <- function(data1,data2, dataInit, selected, horizon, ex
   benefits.decomp <- melt(d, id.vars=c("agePerson1", "year.index", "CareerPath","c"),
                           variable.name="Program",value.name="Transfer")
   
-  benefits.decomp$Transfer <- replace(benefits.decomp$Transfer, benefits.decomp$Transfer==0, NA)
+  #benefits.decomp$Transfer <- replace(benefits.decomp$Transfer, benefits.decomp$Transfer==0, NA)
   #benefits.decomp <- benefits.decomp[is.na(benefits.decomp$Transfer) == FALSE, ]
-  benefits.decomp$Program <- droplevels(benefits.decomp$Program)
+  #benefits.decomp$Program <- droplevels(benefits.decomp$Program)
   
   
   ########################
@@ -5927,8 +5927,9 @@ function.DCFlex<-function(data){
   
   # DC Flex available for up to 5 years only
   years<-unique(data$Year)
-  minYear<-min(years)
+  minYear<-min(years)+1
   dcFlexLength <- 4  # years DC Flex lasts
+  data$value.dcflex <- 0
   
   # $8,400 per year up to 5 years if income not being more than 40% of Median Family Income
   temp <- filter(data, data$Year %in% seq(minYear, minYear+dcFlexLength))
@@ -5936,7 +5937,6 @@ function.DCFlex<-function(data){
   threshold <- 0.4*dc_mfi$Median_Family_Income[dc_mfi$Household_Size == fam_size]
   temp$value.dcflex[temp$income <= threshold] <- 8400
   
-  data$value.dcflex <- 0
   subset <- data$Year %in% seq(minYear, minYear+dcFlexLength)
   data$value.dcflex[subset] <- temp$value.dcflex
   
@@ -6129,10 +6129,10 @@ table.Summary <- function(data, dataInit, benefitslist, horizon){
   df2 <- format(round(df2,0), big.mark=",")
   
   df <- cbind(df1, df2)
-  for (program in benefitslist) {
-    if (all(df[program] == 0))
-      df[program] <- NULL
-  }
+  #for (program in benefitslist) {
+  #  if (all(df[program] == 0))
+  #    df[program] <- NULL
+  #}
   
   names(df)[names(df)=="CareerPath"] <- "Career Path"
   names(df)[names(df)=="income"] <- "Pre-tax Income"

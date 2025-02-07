@@ -2735,13 +2735,13 @@ shinyUI(navbarPage(title = "CLIFF", id = "navBar",
                                                                    )
                                                                    
                                                                    ,conditionalPanel(condition = "input.state=='DC'"
-                                                                                     ,checkboxInput("DCflex", strong("I am a DC Flex Participant"), FALSE)
+                                                                                     ,checkboxInput("DCflex", strong("DC Flex Program"), FALSE)
                                                                                      ,br()
                                                                    )
                                                                    
                                                                    ,conditionalPanel(condition = "input.state=='DC' & ((input.section8 == true & (input.frsp == true 
-                                                                                     | input.careerMap == true | input.DCflex == true)) | (input.frsp == true & (input.careerMap == true
-                                                                                     | input.DCflex == true)) | (input.careerMap == true & input.DCflex == true))",
+                                                                                     | input.careerMap == true | input.DCflex == true)) | (input.frsp == true & input.careerMap == true) 
+                                                                                     | (input.careerMap == true & input.DCflex == true))",
                                                                                      h4(span(textOutput("error_frsp"), style="color:red"))
                                                                                      ,br()
                                                                    )
