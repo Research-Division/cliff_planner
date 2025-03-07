@@ -1507,7 +1507,6 @@ shinyServer(function(input, output, session) {
           programs.dcflex<-FALSE
         }
 
-
         if(careerMap==FALSE & frsp==TRUE){ # If FRSP is chosen, then set FRSP to true and share of income paid towards rent to 40%; ER 9/20/23: DC changed the program so that FRSP share is not 30%
           programs.frsp<-TRUE
           frsp_share<-0.3
@@ -1532,8 +1531,10 @@ shinyServer(function(input, output, session) {
         }
         
         if(programs.dcflex == TRUE){
-          programs.frsp <- TRUE
-          frsp_share<-0.3
+          if (frsp==TRUE)
+            programs.dcflex_start <- 1  # DC_Flex starts after FRSP
+          else
+            programs.dcflex_start <- 0  
         }
       }
 
@@ -1541,12 +1542,13 @@ shinyServer(function(input, output, session) {
         benefitslist<-c(benefitslist,"Section 8 Housing Voucher")
       else if (programs.rap)
         benefitslist<-c(benefitslist,"RAP")
-      else if (careerMap)
+      else if (programs.careermap)
         benefitslist<-c(benefitslist,"Career MAP - Housing", "Career MAP Income Support")
-      else if (programs.dcflex)
-        benefitslist<-c(benefitslist,"FRSP", "DC Flex")
-      else if (frsp)
+      else if (programs.frsp)
         benefitslist<-c(benefitslist,"FRSP")
+      
+      if (programs.dcflex)
+        benefitslist<-c(benefitslist,"DC Flex")
      
       # Initial/Continuous Eligibility
       contelig.headstart <- isolate(as.logical(input$headstart_cont))
@@ -2942,7 +2944,7 @@ shinyServer(function(input, output, session) {
       data_earned_init <- function.createVars.CLIFF(data_earned_init)
       
       if (programs.dcflex==TRUE){
-        data_init <- function.DCFlex(data_init)  
+        data_init <- function.DCFlex(data_init,dcflex_startind=programs.dcflex_start)  
         data_init$netexp.rentormortgage <- data_init$netexp.rentormortgage - data_init$value.dcflex
         data_init$netexp.housing <- data_init$netexp.housing - data_init$value.dcflex
         data_init$total.transfers <- data_init$total.transfers + data_init$value.dcflex
@@ -3063,7 +3065,7 @@ shinyServer(function(input, output, session) {
         data_1$NetResources <- data_1$NetResources + data_1$value.hhf #+ data_1$value.section8
 
         if (programs.dcflex==TRUE){
-          data_1 <- function.DCFlex(data_1)  
+          data_1 <- function.DCFlex(data_1,dcflex_startind=programs.dcflex_start)  
           data_1$netexp.rentormortgage <- data_1$netexp.rentormortgage - data_1$value.dcflex
           data_1$netexp.housing <- data_1$netexp.housing - data_1$value.dcflex
           data_1$total.transfers <- data_1$total.transfers + data_1$value.dcflex
@@ -3182,7 +3184,7 @@ shinyServer(function(input, output, session) {
         data_2$NetResources <- data_2$NetResources + data_2$value.hhf #+ data_2$value.section8
 
         if (programs.dcflex==TRUE){
-          data_2 <- function.DCFlex(data_2)  
+          data_2 <- function.DCFlex(data_2,dcflex_startind=programs.dcflex_start)  
           data_2$netexp.rentormortgage <- data_2$netexp.rentormortgage - data_2$value.dcflex
           data_2$netexp.housing <- data_2$netexp.housing - data_2$value.dcflex
           data_2$total.transfers <- data_2$total.transfers + data_2$value.dcflex

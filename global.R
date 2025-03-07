@@ -5922,12 +5922,12 @@ xxxxx <<- 30
 
 #-----------------------------------------------------------------------
 # Calculate DC Flex benefit values
-function.DCFlex<-function(data){
+function.DCFlex<-function(data, dcflex_startind){
   dc_mfi <- read_csv('2024/DC_median_family_income_2024.csv', show_col_types = FALSE)
   
   # DC Flex available for up to 5 years only
   years<-unique(data$Year)
-  minYear<-min(years)+1
+  minYear<-min(years)+dcflex_startind
   dcFlexLength <- 4  # years DC Flex lasts
   data$value.dcflex <- 0
   
