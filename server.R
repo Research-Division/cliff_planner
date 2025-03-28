@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$error_frsp <- renderText({
-    "Warning: Section 8, FRSP/DC Flex, and CareerMAP are mutually exclusive programs. Please select one program."
+    "Warning: Section 8 can not be selected with FRSP, DC Flex, or CareerMAP programs."
   })
 
   output$error_family_age <- renderText({
