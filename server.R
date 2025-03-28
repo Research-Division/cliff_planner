@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$error_frsp <- renderText({
-    "Warning: Section 8, FRSP, CareerMAP and DC Flex are mutually exclusive programs. Please select one program."
+    "Warning: Section 8 can not be selected with FRSP, DC Flex, or CareerMAP programs."
   })
 
   output$error_family_age <- renderText({
@@ -1422,6 +1422,7 @@ shinyServer(function(input, output, session) {
       programs.rap <- FALSE 
       programs.frsp <- FALSE
       programs.careermap <- FALSE
+      programs.dcflex <- FALSE
       frsp_share<-0
       
       #programs.healthcare<-isolate(as.logical(input$healthcare))
@@ -1483,7 +1484,7 @@ shinyServer(function(input, output, session) {
      #   programs.ssdi <- FALSE
     #    programs.ssi <- FALSE
     #  }
-      
+     
       if(state == "CT"){
         programs.rap <- isolate(as.logical(input$rap))
         if (programs.rap == TRUE & programs.section8 == TRUE){
@@ -1495,13 +1496,16 @@ shinyServer(function(input, output, session) {
       if(state == "DC"){
         frsp<<-isolate(as.logical(input$frsp)) # FRSP Participation (participants pay 40% of their income towards rent) - ER 9/20/23: DC changed the program so that FRSP share is not 30%
         careerMap<<-isolate(as.logical(input$careerMap)) # Career Map Participation (participants pay 30% of their income towards rent)
+        
+        programs.dcflex <- isolate(as.logical(input$DCflex))
+
         if(careerMap==TRUE & frsp==FALSE){ # If Career MAP is choosen, then set FRSP to true and share of income paid towards rent to 30%
           programs.frsp<-TRUE
           programs.careermap<-TRUE
           frsp_share<-0.3 # Assume Career MAP share of 30%
           programs.section8<-FALSE
+          programs.dcflex<-FALSE
         }
-
 
         if(careerMap==FALSE & frsp==TRUE){ # If FRSP is chosen, then set FRSP to true and share of income paid towards rent to 40%; ER 9/20/23: DC changed the program so that FRSP share is not 30%
           programs.frsp<-TRUE
@@ -1520,22 +1524,32 @@ shinyServer(function(input, output, session) {
           frsp_share<-0
         }
 
-
         if(frsp==TRUE & programs.section8 == TRUE){ # These programs are mutually exclusive
           programs.frsp <- TRUE
+          frsp_share<-0.3
           programs.section8<-FALSE
         }
+        
+        if(programs.dcflex == TRUE){
+          if (frsp==TRUE)
+            programs.dcflex_start <- 1  # DC_Flex starts after FRSP
+          else
+            programs.dcflex_start <- 0  
+        }
       }
-      
+
       if (programs.section8)
         benefitslist<-c(benefitslist,"Section 8 Housing Voucher")
       else if (programs.rap)
         benefitslist<-c(benefitslist,"RAP")
       else if (programs.careermap)
-        benefitslist<-c(benefitslist,"Career MAP - Housing","Career MAP Income Support")
+        benefitslist<-c(benefitslist,"Career MAP - Housing", "Career MAP Income Support")
       else if (programs.frsp)
         benefitslist<-c(benefitslist,"FRSP")
       
+      if (programs.dcflex)
+        benefitslist<-c(benefitslist,"DC Flex")
+     
       # Initial/Continuous Eligibility
       contelig.headstart <- isolate(as.logical(input$headstart_cont))
       contelig.earlyheadstart <- isolate(as.logical(input$earlyheadstart_cont))
@@ -2899,6 +2913,10 @@ shinyServer(function(input, output, session) {
       if(input$getresults>0 & input$calculateBudget>0 & input$expenses_type=="expenses.default"){
         inputs$horizon<-isolate(as.numeric(input$horizon))
         data_init<-overrideExpenses.SS.init(data=data_init, expenses.list, inputs$horizon)
+        if(programs.careermap == TRUE){ 
+          data_init$exp.rentormortgage <- data_init$exp.rentormortgage - data_init$exp.utilities
+          data_init$exp.housing <- data_init$exp.rentormortgage + data_init$exp.utilities
+        }
       }
 
       inputs <<- inputs
@@ -2925,6 +2943,14 @@ shinyServer(function(input, output, session) {
       data_init<-function.createVars.CLIFF(data_init)
       data_earned_init <- function.createVars.CLIFF(data_earned_init)
       
+      if (programs.dcflex==TRUE){
+        data_init <- function.DCFlex(data_init,dcflex_startind=programs.dcflex_start)  
+        data_init$netexp.rentormortgage <- data_init$netexp.rentormortgage - data_init$value.dcflex
+        data_init$netexp.housing <- data_init$netexp.housing - data_init$value.dcflex
+        data_init$total.transfers <- data_init$total.transfers + data_init$value.dcflex
+        data_init$NetResources <- data_init$NetResources + data_init$value.dcflex
+      }
+
       #data_init$total.transfers <- data_init$total.transfers + data_init$value.section8
 
 
@@ -2980,6 +3006,10 @@ shinyServer(function(input, output, session) {
         if(input$getresults>0 & input$calculateBudget>0 & input$expenses_type=="expenses.default"){
           inputs$horizon<-isolate(as.numeric(input$horizon))
           data_1<-overrideExpenses.SS(data_1, expenses.list, horizon=inputs$horizon)
+          if(programs.careermap == TRUE){ 
+            data_1$exp.rentormortgage <- data_1$exp.rentormortgage - data_1$exp.utilities
+            data_1$exp.housing <- data_1$exp.rentormortgage + data_1$exp.utilities
+          }
         }
 
 
@@ -2991,6 +3021,7 @@ shinyServer(function(input, output, session) {
               data_1<-addAssetMappingTax(data_1, assistance.tax.list, horizon=inputs$horizon)
              # data_1$income<-data_1$income + data_1$value.assistance.tax.other
               }
+
 
 
 
@@ -3033,6 +3064,13 @@ shinyServer(function(input, output, session) {
         data_1$total.transfers <- data_1$total.transfers + data_1$value.hhf #+ data_1$value.section8
         data_1$NetResources <- data_1$NetResources + data_1$value.hhf #+ data_1$value.section8
 
+        if (programs.dcflex==TRUE){
+          data_1 <- function.DCFlex(data_1,dcflex_startind=programs.dcflex_start)  
+          data_1$netexp.rentormortgage <- data_1$netexp.rentormortgage - data_1$value.dcflex
+          data_1$netexp.housing <- data_1$netexp.housing - data_1$value.dcflex
+          data_1$total.transfers <- data_1$total.transfers + data_1$value.dcflex
+          data_1$NetResources <- data_1$NetResources + data_1$value.dcflex
+        }
         data_one <<- data_1 # output data to global environment
 
       }
@@ -3073,6 +3111,10 @@ shinyServer(function(input, output, session) {
         if(input$getresults>0 & input$calculateBudget>0 & input$expenses_type=="expenses.default"){
           inputs$horizon<-isolate(as.numeric(input$horizon))
           data_2<-overrideExpenses.SS(data_2, expenses.list, horizon=inputs$horizon)
+          if(programs.careermap == TRUE){ 
+            data_2$exp.rentormortgage <- data_2$exp.rentormortgage - data_2$exp.utilities
+            data_2$exp.housing <- data_2$exp.rentormortgage + data_2$exp.utilities
+          }
         }
 
         # Add asset mapping
@@ -3141,7 +3183,14 @@ shinyServer(function(input, output, session) {
         data_2$total.transfers <- data_2$total.transfers + data_2$value.hhf #+ data_2$value.section8
         data_2$NetResources <- data_2$NetResources + data_2$value.hhf #+ data_2$value.section8
 
-        data_two <<- data_2 # output to global environment
+        if (programs.dcflex==TRUE){
+          data_2 <- function.DCFlex(data_2,dcflex_startind=programs.dcflex_start)  
+          data_2$netexp.rentormortgage <- data_2$netexp.rentormortgage - data_2$value.dcflex
+          data_2$netexp.housing <- data_2$netexp.housing - data_2$value.dcflex
+          data_2$total.transfers <- data_2$total.transfers + data_2$value.dcflex
+          data_2$NetResources <- data_2$NetResources + data_2$value.dcflex
+        }
+            data_two <<- data_2 # output to global environment
 
       }
 
