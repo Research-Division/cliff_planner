@@ -3234,9 +3234,7 @@ shinyServer(function(input, output, session) {
       # Chart 1: Lifetime Income Bar Charts
       output$income.lifetime<- renderPlotly({
 
-
-
-      print(c)
+      #print(c)
         income.life.values(data_1, data_2, BLSregion, inputs)
         
       }
@@ -3296,17 +3294,20 @@ shinyServer(function(input, output, session) {
       #, width = 1100, height = 421
       )
 
-
       #-------------------------------
       # Default SS Expenses
       observeEvent(input$horizon, { # Make it reactive to the change in horizon
 
         inputs$horizon<-isolate(as.numeric(input$horizon))
-
-        output$table.DefaultExpenses<- renderTable({
-          table.DefaultExpenses(data_1, horizon=inputs$horizon,inputs)
-        }, rownames = TRUE, colnames = TRUE, bordered = TRUE, width = '80%', spacing = "l", align = 'l', digits = 0)
-
+        
+        if (inputs$choiceOccupation_1 !="empty")
+          output$table.DefaultExpenses<- renderTable({
+            table.DefaultExpenses(data_1, horizon=inputs$horizon,inputs)
+          }, rownames = TRUE, colnames = TRUE, bordered = TRUE, width = '80%', spacing = "l", align = 'l', digits = 0)
+        else
+          output$table.DefaultExpenses<- renderTable({
+            table.DefaultExpenses(data_2, horizon=inputs$horizon,inputs)
+          }, rownames = TRUE, colnames = TRUE, bordered = TRUE, width = '80%', spacing = "l", align = 'l', digits = 0)
       })
 
       updateActionButton(session, "getresults", label = "Recalculate Results")
@@ -3414,7 +3415,7 @@ shinyServer(function(input, output, session) {
 
       # table for screen reader    
       srtablehorizon <- 10
-      results_table <- table.Summary(rbind(data_2, data_1), data_init, benefitslist, srtablehorizon)
+      results_table <- table.Summary(bind_rows(data_2, data_1), data_init, benefitslist, srtablehorizon)
       
       # download results table for screen reader
       output$print1 <- downloadHandler(
