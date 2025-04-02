@@ -6033,13 +6033,19 @@ textMyBudget <- function(data1, data2, selected, horizon, exp_type,inputs){
 }
 
 # Summary Table
-table.Summary <- function(data, dataInit, benefitslist, horizon){
+table.Summary <- function(data_1, data_2, dataInit, benefitslist, horizon){
   
   # Career option was not specified
   #validate(
   #  need(!is.na(sum(data$income)), "The career options were not specified at the 'Choose Career' step")
   #)
   
+  if (is.null(data_1$occ_title))
+    data <- data_2
+  else if (is.null(data_2$occ_title))
+    data <- data_1
+  else
+    data <- rbind(data_2, data_1)
   
   dataInit$value.assistance.other <- dataInit$value.assistance.other + dataInit$value.assistance.tax.other
   data$value.assistance.other <- data$value.assistance.other + data$value.assistance.tax.other

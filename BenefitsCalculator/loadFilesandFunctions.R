@@ -9,7 +9,7 @@ load("BenefitsCalculator/Database/tables.rdata")
 load("BenefitsCalculator/Database/parameters.defaults.rdata")
 load("BenefitsCalculator/Database/expenses.rdata")
 load("BenefitsCalculator/Database/benefit.parameters.rdata")
-load("BenefitsCalculator/Database/coeff_all.rdata") # Estimated wage growth (Current methodology)
+#load("BenefitsCalculator/Database/coeff_all.rdata") # Estimated wage growth (Current methodology)
 
 # Load all necessry functions
 source("BenefitsCalculator/functions/benefits_functions.R", local=TRUE) # Benefits calculations

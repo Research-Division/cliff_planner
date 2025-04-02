@@ -3322,15 +3322,6 @@ shinyServer(function(input, output, session) {
 
       inputs$career_plan<-isolate(as.character(input$career_plan))
       inputs$horizon<-isolate(as.numeric(input$horizon))
-
-      # output values to global environment for checking
-      data_one <<- data_1
-      data_two <<- data_2
-      data_initial <<- data_init
-      inputs <<- inputs
-      exp_type <<- exp_type
-      career_plan <<- inputs$career_plan
-      horizon <<- inputs$horizon
       
       output$textCareerOption <- renderText({
         if (input$career_plan == "Career Option 1")
@@ -3415,7 +3406,7 @@ shinyServer(function(input, output, session) {
 
       # table for screen reader    
       srtablehorizon <- 10
-      results_table <- table.Summary(bind_rows(data_2, data_1), data_init, benefitslist, srtablehorizon)
+      results_table <- table.Summary(data_1, data_2, data_init, benefitslist, srtablehorizon)
       
       # download results table for screen reader
       output$print1 <- downloadHandler(
