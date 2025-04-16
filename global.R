@@ -34,12 +34,10 @@ source("BenefitsCalculator/loadFilesandFunctions.R", local=TRUE) # Load auxiliar
 source("BenefitsCalculator/libraries.R", local=TRUE) # Load required packages
 
 
-data_wage_parameters <- readRDS("2024/data_parameters_2024.rds")
-area_county_town <- fread('2024/cw_area_county_town_2024.csv', colClasses = "character")
-cw_state_minwage <- fread('2024/cw_state_year_min_wage_2024.csv')
-occ_area <- fread('2024/area_occupations_list_2024.csv', colClasses = "character")
-#loc_meta <- fread('locations_list.csv')
-#occ_meta <- fread('occupations_list.csv')
+data_wage_parameters <- readRDS("BenefitsCalculator/Database/data_parameters_2025.rds")
+#area_county_town <- fread('BenefitsCalculator/Database/cw_area_county_town_2025.csv', colClasses = "character")
+cw_state_minwage <- fread('BenefitsCalculator/Database/cw_state_year_min_wage_2025.csv')
+occ_area <- fread('BenefitsCalculator/Database/area_occupations_list_2025.csv', colClasses = "character")
 
 ####################################
 #GLOBAL SETTINGS
@@ -271,7 +269,7 @@ k_ftorpt <- "FT" #not used anywher in benefits calc right now
 schoolagesummercare <- "PT" #don't change - ben calc not yet set up to handle FT
 headstart_ftorpt <-"PT" #use the same for both headstart & earlyheadstart 
 preK_ftorpt <- "PT"
-xxxxx <<- 5
+
 #################################################################################
 # Required Functions
 #################################################################################
@@ -408,8 +406,6 @@ net.res.life.values <- function(data1, data2, inputs){
   
 }
 
-
-xxxxx <<- 6
 
 
 # Summary Bar Chart - Lifetime After Tax Income 
@@ -550,7 +546,7 @@ income.life.values <- function(data1,data2,c,inputs){
 }
 
 #-----------------------------------------------------------------------
-xxxxx <<- 7
+
 # NET RESOURCES
 
 net.resources <- function(data1, data2, dataInit, c, inputs){
@@ -609,9 +605,6 @@ net.resources <- function(data1, data2, dataInit, c, inputs){
   validate(
     need(inputs$fam_disab_error ==0, "Please select 'Yes' or 'No' for the question 'Does anyone in the home have a disability?'")
   )
-  
-  
-  
   
   
   
@@ -759,8 +752,6 @@ net.resources <- function(data1, data2, dataInit, c, inputs){
 }
 
 
-
-xxxxx <<- 8
 
 
 # Career Paths Comparison - Gross Income
@@ -983,13 +974,11 @@ income.gross <- function(data1,data2, dataInit, c,inputs){
   
 }
 
-xxxxx <<- 9
 
 #-----------------------------------------------------------------------
 # Career Paths Comparison - After Tax Income + Self-Sufficiency Target
 after.tax.self.sufficiency.values <- function(data1,data2,dataInit,c,inputs){
   
-  xxxxx <<- 911111
   ########################
   # PRE-PROCESSING
   ########################
@@ -1015,7 +1004,6 @@ after.tax.self.sufficiency.values <- function(data1,data2,dataInit,c,inputs){
     need(!is.na(inputs$disab.work.exp) & inputs$disab.work.exp>=0, "Please input a non-negative value for amount spent per month on specialized equipment or services that enable household member(s) with disabilities to work.")
   )
   
-  xxxxx <<- 905
   
   validate(
     need(inputs$ssdi_no_adults ==0, "SSDI has been selected, but none of the adults have a disability.")
@@ -1039,8 +1027,6 @@ after.tax.self.sufficiency.values <- function(data1,data2,dataInit,c,inputs){
     need(inputs$fam_disab_error ==0, "Please select 'Yes' or 'No' for the question 'Does anyone in the home have a disability?'")
   )
   
-  xxxxx <<- 91
-  
   
   if(inputs$choiceOccupation_1 !="empty" & inputs$choiceOccupation_2 =="empty"){d<-data1}
   if(inputs$choiceOccupation_1 =="empty" & inputs$choiceOccupation_2 !="empty"){d<-data2}
@@ -1060,7 +1046,6 @@ after.tax.self.sufficiency.values <- function(data1,data2,dataInit,c,inputs){
   ########################
   # CHART    ########################## NEEDS PLOTLY 
   ########################
-  xxxxx <<- 911
   
   # Case I: Career Option 1 is NOT Current Path
   if(inputs$type_career_1 != "current"){
@@ -1103,9 +1088,7 @@ after.tax.self.sufficiency.values <- function(data1,data2,dataInit,c,inputs){
     ggtitle("Annual Take-Home Pay and the Minimum Household Budget") +
     geom_line(d, mapping=aes(x=`Age of Person`, y=`Minimum Household Budget`, color = "Minimum Household Budget", shape = "Minimum Household Budget"), lty=3, size = 1.5) 
   
-  
-  
-  xxxxx <<- 912
+
   ########
   ## set fixed color for Self-Sufficiency line
   ########
@@ -1128,8 +1111,7 @@ after.tax.self.sufficiency.values <- function(data1,data2,dataInit,c,inputs){
   names(path_colors_vector)[length(path_colors_vector)-1] <-  "Minimum Household Budget"
   
   names(path_colors_vector)[length(path_colors_vector)] <-  "Current Job"
-  
-  xxxxx <<- 913
+
   
 after.tax <- after.tax + scale_color_manual(values = path_colors_vector)
 
@@ -1147,7 +1129,6 @@ after.tax <- ggplotly(after.tax, tooltip = c("x","y","group") #"text"
                                                                                                                     font=list(size=15, color="black")))
   }
   
-xxxxx <<- 914
 
   # Case II: Career Option 1 is Current Path
   if(inputs$type_career_1 == "current"){
@@ -1189,7 +1170,7 @@ xxxxx <<- 914
     ## set fixed color for Self-Sufficiency line
     ########
     ## grab career path names
-xxxxx <<- 915    
+
 
     path_names <- unique(d$CareerPath)
     
@@ -1983,7 +1964,6 @@ expenses.budget.values <- function(data1,data2,dataInit, selected, horizon, exp_
   
  }
 
-xxxxx <<-15
 
 #-----------------------------------------------------------------------
 # Budgeting - Override Default Expenses with Custom Values (case when "Actual" expenses type is selected)
@@ -2620,7 +2600,7 @@ overrideExpenses.Actual <- function(data, expenses.list, horizon, childcare1 = F
   return(data)
 }
 
-xxxxx <<- 17
+
 #-----------------------------------------------------------------------
 # Budgeting - Override Default Expenses with Custom Values (case when "Actual" expenses type is selected) - data_init version
 overrideExpenses.Actual.init <- function(data, expenses.list, horizon, childcare1 = FALSE, childcare2 = FALSE){
@@ -3017,7 +2997,6 @@ overrideExpenses.SS.init <- function(data, expenses.list, horizon){
 }
 
 
-xxxxx <<- 19
 #-----------------------------------------------------------------------
 # Budgeting - Include Tuition and Fees into Calculations
 overrideTuition <- function(data, tuition, grants, loans, educationDuration){
@@ -3162,7 +3141,7 @@ overrideStudentLoans <- function(data, loans, educationDuration){
   return(data)
 }
 
-xxxxx <<- 21
+
 #-----------------------------------------------------------------------
 # Budgeting - Include Asset Mapping into Calculations
 addAssetMapping <- function(data, assistance.list, horizon){
@@ -3960,7 +3939,6 @@ table.DefaultExpenses<-function(data, horizon,inputs){
   
 }
 
-xxxxx <<- 24
 
 #-----------------------------------------------------------------------
 # Budgeting - Total Budget Table
@@ -4893,7 +4871,6 @@ table.Transfers<-function(data1, data2, dataInit, selected, horizon, exp_type, i
   
 }
 
-xxxxx <<- 28
 
 #-----------------------------------------------------------------------
 # Budgeting - Net Expenses Breakdown Table

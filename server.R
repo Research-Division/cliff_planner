@@ -177,7 +177,7 @@ shinyServer(function(input, output, session) {
   observeEvent(updateCounty(),{
     state<-isolate(as.character(input$state))
     updateSelectizeInput(session, 'county_main',
-                         choices = sort(area_county_town[area_county_town$stateabbrev == state, county_town_BLSname]),
+                         choices = sort(table.countymsa[table.countymsa$stateAbbrev == state, countyortownName]),
                          #server = TRUE,
                          selected = character(0)
     )
@@ -196,7 +196,7 @@ shinyServer(function(input, output, session) {
     if(is.null(industry_list)){industry_list <- unique(occ_area$occsoc2_name)}
     
     # new wage projection
-    area_code <- area_county_town$area[area_county_town$stateabbrev==input$state & area_county_town$county_town_BLSname==input$county_main]
+    area_code <- table.countymsa$area[table.countymsa$stateAbbrev==input$state & table.countymsa$countyortownName==input$county_main]
     selected_occ1 <- occ_area[area %in% area_code & occsoc2_name %in% industry_list]
     
 
@@ -222,7 +222,7 @@ shinyServer(function(input, output, session) {
     if(is.null(industry_list)){industry_list<-unique(occ_area$occsoc2_name)}
 
     # new wage projection
-    area_code <- area_county_town$area[area_county_town$stateabbrev==input$state & area_county_town$county_town_BLSname==input$county_main]
+    area_code <- table.countymsa$area[table.countymsa$stateAbbrev==input$state & table.countymsa$countyortownName==input$county_main]
     selected_occ1 <- occ_area[area %in% area_code & occsoc2_name %in% industry_list]
     
     # Filter on occupation type
@@ -252,7 +252,7 @@ shinyServer(function(input, output, session) {
     if(is.null(industry_list)){industry_list<-unique(occ_area$occsoc2_name)}
     
     # new wage projection
-    area_code <- area_county_town$area[area_county_town$stateabbrev==input$state & area_county_town$county_town_BLSname==input$county_main]
+    area_code <- table.countymsa$area[table.countymsa$stateAbbrev==input$state & table.countymsa$countyortownName==input$county_main]
     selected_occ2 <- occ_area[area %in% area_code & occsoc2_name %in% industry_list]
     
     # Filter on occupation type
@@ -778,11 +778,12 @@ shinyServer(function(input, output, session) {
       inputs$stateAbbrev<-isolate(as.character(input$state))
       state<-isolate(as.character(input$state))
       inputs$countyortownName<-isolate(input$county_main)
-      BLSregion <- paste0(inputs$countyortownName, ", ",inputs$stateAbbrev)
-      city_name <- area_county_town$county_town_name[area_county_town$stateabbrev==state & area_county_town$county_town_BLSname==input$county_main]
+      #BLSregion <- paste0(inputs$countyortownName, ", ",inputs$stateAbbrev)
+      city_name <- table.countymsa$countyortownName[table.countymsa$stateAbbrev==state & table.countymsa$countyortownName==input$county_main]
       region <- as.character(paste(city_name, state, sep=", ", collapse = NULL))
       inputs$cityName <- region
-      inputs$cityCode <- area_county_town$area[area_county_town$stateabbrev==state & area_county_town$county_town_BLSname==input$county_main]
+      inputs$cityCode <- table.countymsa$area[table.countymsa$stateAbbrev==input$state & table.countymsa$countyortownName==input$county_main]
+
       
       #---------------------------------------------------------------------------
       # Demographics
@@ -2510,7 +2511,7 @@ shinyServer(function(input, output, session) {
       # CALCULATIONS
       ###########################################################################################
 
-      inputs <<- inputs
+      #inputs <<- inputs
 
 
       # Create data for different combinations
@@ -2657,7 +2658,7 @@ shinyServer(function(input, output, session) {
 
       data_1 <- data[data$careerpathID==1,]
       data_2 <- data[data$careerpathID==2,]
-      inputs <<- inputs
+      #inputs <<- inputs
 
 
       #---------------------------------------------------------------------------
@@ -2686,10 +2687,11 @@ shinyServer(function(input, output, session) {
         if(inputs$type_career_1 == "current"){
           data_1$hours <- current_hours*52
         }
-
+        data_1<-as.data.table(data_1)
         data_1<-function.projectWages.planner(data_1)  # Wage growth projection: produces NAs if wage data doesn't exist
 
         data_1$disab.income <- data_1$income2_disab + data_1$income3_disab + data_1$income4_disab + data_1$income5_disab + data_1$income6_disab
+        data_1<-as.data.frame(data_1)
         # Generate Individual VS Family income
         data_1<-data_1 %>%
           mutate(income_ind = income
@@ -2760,11 +2762,12 @@ shinyServer(function(input, output, session) {
         }
 
         #   data2_post<<-data_2
-
+        data_2<-as.data.table(data_2)
         data_2<-function.projectWages.planner(data_2)  # Wage growth projection: produces NAs if wage data doesn't exist
         
         data_2$disab.income <- data_2$income2_disab + data_2$income3_disab + data_2$income4_disab + data_2$income5_disab + data_2$income6_disab
-
+        data_2<-as.data.frame(data_2)
+        
            # Generate Individual VS Family income
         data_2<-data_2 %>%
           mutate(income_ind = income
@@ -2797,7 +2800,7 @@ shinyServer(function(input, output, session) {
         data_2$CareerPath<-paste0("2 - ", data_2$CareerPath)
 
 
-        data_2_check <<- data_2
+        #data_2_check <<- data_2
       }
 
       # Create "Initial" Data
@@ -2919,7 +2922,7 @@ shinyServer(function(input, output, session) {
         }
       }
 
-      inputs <<- inputs
+      #inputs <<- inputs
 
       data_init<-BenefitsCalculator.OtherBenefits(data_init, APPLY_TANF=programs.tanf, APPLY_SSDI=programs.ssdi, APPLY_SSI=programs.ssi)
       data_init<-BenefitsCalculator.Childcare(data_init, APPLY_CHILDCARE, APPLY_HEADSTART=programs.head_start, APPLY_PREK=programs.prek, APPLY_CCDF=programs.ccdf, APPLY_FATES=programs.fates, contelig.ccdf = `contelig.ccdf`,contelig.headstart = `contelig.headstart`, contelig.earlyheadstart = `contelig.earlyheadstart`) #option to add APPLY_FATES
@@ -2960,7 +2963,7 @@ shinyServer(function(input, output, session) {
       data_init$taxedEarnedIncomeOnly <- data_earned_init$income.aftertax.noTC
       
 
-      data_initial <<- data_init
+      #data_initial <<- data_init
 
 
       #write.csv(data_init, file="data_init.csv")
@@ -2999,7 +3002,7 @@ shinyServer(function(input, output, session) {
         }
 
 
-        data_uno <<- data_1
+        #data_uno <<- data_1
         expenses.list <<- expenses.list
 
         # # Override expenses (If "Self-Sufficiency" | "ALICE" expenses type is selected)
@@ -3071,7 +3074,7 @@ shinyServer(function(input, output, session) {
           data_1$total.transfers <- data_1$total.transfers + data_1$value.dcflex
           data_1$NetResources <- data_1$NetResources + data_1$value.dcflex
         }
-        data_one <<- data_1 # output data to global environment
+        #data_one <<- data_1 # output data to global environment
 
       }
 
@@ -3190,7 +3193,7 @@ shinyServer(function(input, output, session) {
           data_2$total.transfers <- data_2$total.transfers + data_2$value.dcflex
           data_2$NetResources <- data_2$NetResources + data_2$value.dcflex
         }
-            data_two <<- data_2 # output to global environment
+            #data_two <<- data_2 # output to global environment
 
       }
 
@@ -3235,8 +3238,8 @@ shinyServer(function(input, output, session) {
       output$income.lifetime<- renderPlotly({
 
       #print(c)
-        income.life.values(data_1, data_2, BLSregion, inputs)
-        
+        income.life.values(data_1, data_2, region, inputs)
+        #income.life.values(data_1, data_2, BLSregion, inputs)
       }
       #, width = 800, height = 371
       )

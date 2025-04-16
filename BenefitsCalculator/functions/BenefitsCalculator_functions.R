@@ -106,13 +106,15 @@ function.createData<-function(inputs){
 function.InitialTransformations<-function(data){
 
   # remove old county fips codes for Connecticut - will work on re-doing PRD so we can remove this in the future
-  table.countypop<-table.countypop %>%
-    filter(!stcountyfips2010  %in% c("9_1", "9_3", "9_5" ,"9_7" ,"9_9", "9_11", "9_13" ,"9_15"))
+  #table.countypop<-table.countypop %>%
+  #  filter(!stcountyfips2010  %in% c("9_1", "9_3", "9_5" ,"9_7" ,"9_9", "9_11", "9_13" ,"9_15"))
   
-  data<- data %>%
-  left_join(table.countypop,by=c("countyortownName","stateAbbrev")) %>%
-  left_join(table.msamap, by=c("stateAbbrev", "countyortownName"))
+  #data<- data %>%
+  #left_join(table.countypop,by=c("countyortownName","stateAbbrev")) %>%
+  #left_join(table.msamap, by=c("stateAbbrev", "countyortownName"))
 
+  data <- table.countymsa[data, on=.(countyortownName,stateAbbrev)]
+  
   # Calculate number of adults and kids
   data$numadults=rowSums(cbind(data$agePerson1, data$agePerson2, data$agePerson3, data$agePerson4, data$agePerson5, data$agePerson6, data$agePerson7, data$agePerson8, data$agePerson9, data$agePerson10, data$agePerson11, data$agePerson12)>=19,na.rm=TRUE)
   data$numkids=rowSums(cbind(data$agePerson1, data$agePerson2, data$agePerson3, data$agePerson4, data$agePerson5, data$agePerson6, data$agePerson7, data$agePerson8, data$agePerson9, data$agePerson10, data$agePerson11, data$agePerson12)<=18,na.rm=TRUE) # We assume kids are < 19. EITC defines it under age 19 & USDA adult category starts at 19
