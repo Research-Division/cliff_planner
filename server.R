@@ -2687,11 +2687,11 @@ shinyServer(function(input, output, session) {
         if(inputs$type_career_1 == "current"){
           data_1$hours <- current_hours*52
         }
-        data_1<-as.data.table(data_1)
+        #data_1<-as.data.table(data_1)
         data_1<-function.projectWages.planner(data_1)  # Wage growth projection: produces NAs if wage data doesn't exist
 
         data_1$disab.income <- data_1$income2_disab + data_1$income3_disab + data_1$income4_disab + data_1$income5_disab + data_1$income6_disab
-        data_1<-as.data.frame(data_1)
+        #data_1<-as.data.frame(data_1)
         # Generate Individual VS Family income
         data_1<-data_1 %>%
           mutate(income_ind = income
@@ -2762,11 +2762,11 @@ shinyServer(function(input, output, session) {
         }
 
         #   data2_post<<-data_2
-        data_2<-as.data.table(data_2)
+        #data_2<-as.data.table(data_2)
         data_2<-function.projectWages.planner(data_2)  # Wage growth projection: produces NAs if wage data doesn't exist
         
         data_2$disab.income <- data_2$income2_disab + data_2$income3_disab + data_2$income4_disab + data_2$income5_disab + data_2$income6_disab
-        data_2<-as.data.frame(data_2)
+        #data_2<-as.data.frame(data_2)
         
            # Generate Individual VS Family income
         data_2<-data_2 %>%
@@ -2890,10 +2890,11 @@ shinyServer(function(input, output, session) {
       # Initial Point
       #---------------------------------------------------------
       #create lag of income for tax credits calculations
-      data_init<-as.data.table(data_init)
-      data_init[, income_tm12:=c(income[1], income[-.N]), by=countyortownName]
-      data_init<-as.data.frame(data_init)
-
+      #data_init<-as.data.table(data_init)
+      #data_init[, income_tm12:=c(income[1], income[-.N]), by=countyortownName]
+      #data_init<-as.data.frame(data_init)
+      data_init$income_tm12 <- ave(data_init$income, data_init$countyortownName, FUN = function(x) c(x[1], x[-length(x)]))
+      
       # Run Benefits Calculator
       data_init<-BenefitsCalculator.ALICEExpenses(data_init)
 
@@ -2977,10 +2978,11 @@ shinyServer(function(input, output, session) {
 
 
         #create lag of income for tax credits calculations
-        data_1<-as.data.table(data_1)
-        data_1[, income_tm12:=c(income[1], income[-.N]), by=countyortownName]
-        data_1<-as.data.frame(data_1)
-
+        #data_1<-as.data.table(data_1)
+        #data_1[, income_tm12:=c(income[1], income[-.N]), by=countyortownName]
+        #data_1<-as.data.frame(data_1)
+        data_1$income_tm12 <- ave(data_1$income, data_1$countyortownName, FUN = function(x) c(x[1], x[-length(x)]))
+        
         # Run Benefits Calculator
         data_1<-BenefitsCalculator.ALICEExpenses(data_1)
 
@@ -3084,12 +3086,11 @@ shinyServer(function(input, output, session) {
 
 
         #create lag of income for tax credits calculations
-        data_2<-as.data.table(data_2)
-        data_2[, income_tm12:=c(income[1], income[-.N]), by=countyortownName]
-        data_2<-as.data.frame(data_2)
-
-
-
+        #data_2<-as.data.table(data_2)
+        #data_2[, income_tm12:=c(income[1], income[-.N]), by=countyortownName]
+        #data_2<-as.data.frame(data_2)
+        data_2$income_tm12 <- ave(data_2$income, data_2$countyortownName, FUN = function(x) c(x[1], x[-length(x)]))
+        
         # Run Benefits Calculator
         data_2<-BenefitsCalculator.ALICEExpenses(data_2)
 

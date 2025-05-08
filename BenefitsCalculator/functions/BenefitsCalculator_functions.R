@@ -109,11 +109,11 @@ function.InitialTransformations<-function(data){
   #table.countypop<-table.countypop %>%
   #  filter(!stcountyfips2010  %in% c("9_1", "9_3", "9_5" ,"9_7" ,"9_9", "9_11", "9_13" ,"9_15"))
   
-  #data<- data %>%
-  #left_join(table.countypop,by=c("countyortownName","stateAbbrev")) %>%
-  #left_join(table.msamap, by=c("stateAbbrev", "countyortownName"))
+  data<- data %>%
+    left_join(table.countymsa,by=c("countyortownName","stateAbbrev"))
+    # %>% left_join(table.msamap, by=c("stateAbbrev", "countyortownName"))
 
-  data <- table.countymsa[data, on=.(countyortownName,stateAbbrev)]
+  #data <- table.countymsa[data, on=.(countyortownName,stateAbbrev)]
   
   # Calculate number of adults and kids
   data$numadults=rowSums(cbind(data$agePerson1, data$agePerson2, data$agePerson3, data$agePerson4, data$agePerson5, data$agePerson6, data$agePerson7, data$agePerson8, data$agePerson9, data$agePerson10, data$agePerson11, data$agePerson12)>=19,na.rm=TRUE)
@@ -2073,12 +2073,9 @@ if(APPLY_EITC==FALSE){
 # State EITC
 data$value.eitc.state<-function.stateeitc(data
                                           , incomevar = "income_tm12"
-                                          , investmentincomevar ="income.investment"
                                           , federaleitcvar = "value.eitc.fed"
-                                          , stateincometaxvar = "tax.income.state_tm12"
-                                          , ageofRespondentvar = "agePerson1"
-                                          , ageofSpousevar = "agePerson2"
-                                          , ageofYoungestChildvar = "ageofYoungestChild")
+                                          , stateincometaxvar = "tax.income.state_tm12")
+
 data$value.eitc.state[is.na(data$value.eitc.state)]<-0
 
 }
@@ -2090,12 +2087,13 @@ if(APPLY_CTC==FALSE){
 }else if(APPLY_CTC==TRUE){
 
   # State CTC
-  # data$value.ctc.state<-function.statectc(data
-  #                                         , incomevar = "income_tm12"
-  #                                         , stateincometaxvar = "tax.income.state_tm12"
-  #                                         , federalctcvar = "value.ctc.fed")
-  
-  data$value.ctc.state<-0
+
+   data$value.ctc.state<-function.statectc(data
+                                           , incomevar = "income_tm12"
+                                           , stateincometaxvar = "tax.income.state_tm12"
+                                           , federalctcvar = "value.ctc.fed"
+                                           , stateeitcvar = "value.eitc.state")
+
   data$value.ctc.state[is.na(data$value.ctc.state)]<-0
 
 }
