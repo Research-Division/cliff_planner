@@ -5900,7 +5900,7 @@ xxxxx <<- 30
 #-----------------------------------------------------------------------
 # Calculate DC Flex benefit values
 function.DCFlex<-function(data, dcflex_startind){
-  dc_mfi <- read_csv('2024/DC_median_family_income_2024.csv', show_col_types = FALSE)
+  #dc_mfi <- read_csv('2024/DC_median_family_income_2024.csv', show_col_types = FALSE)
   
   # DC Flex available for up to 5 years only
   years<-unique(data$Year)
@@ -5909,13 +5909,15 @@ function.DCFlex<-function(data, dcflex_startind){
   data$value.dcflex <- 0
   
   # $8,400 per year up to 5 years if income not being more than 40% of Median Family Income
-  temp <- filter(data, data$Year %in% seq(minYear, minYear+dcFlexLength))
-  fam_size <- ifelse(temp$famsize[1] < dc_mfi$Household_Size[nrow(dc_mfi)], temp$famsize[1], dc_mfi$Household_Size[nrow(dc_mfi)])
-  threshold <- 0.4*dc_mfi$Median_Family_Income[dc_mfi$Household_Size == fam_size]
-  temp$value.dcflex[temp$income <= threshold] <- 8400
+  #temp <- filter(data, data$Year %in% seq(minYear, minYear+dcFlexLength))
+  #fam_size <- ifelse(temp$famsize[1] < dc_mfi$Household_Size[nrow(dc_mfi)], temp$famsize[1], dc_mfi$Household_Size[nrow(dc_mfi)])
+  #threshold <- 0.4*dc_mfi$Median_Family_Income[dc_mfi$Household_Size == fam_size]
+  #temp$value.dcflex[temp$income <= threshold] <- 8400
   
+  # currently $8,400 per year up to 5 years
   subset <- data$Year %in% seq(minYear, minYear+dcFlexLength)
-  data$value.dcflex[subset] <- temp$value.dcflex
+  #data$value.dcflex[subset] <- temp$value.dcflex
+  data$value.dcflex[subset] <- 8400
   
   return(data)
 }
