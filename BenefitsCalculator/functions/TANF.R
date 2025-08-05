@@ -45,17 +45,9 @@ function.tanfBenefit<-function(data){
   data$tanfValue<-0
   data$value.tanf <-0 
   
-  #Match the entered ruleYear to ruleYear in the TANF data. If there isnt a match then match to the closest ruleYear
-  tanfData<<-tanfData%>%
-    group_by(stateName)%>%
-    filter(RuleYear<=unique(data$ruleYear))%>% #drop any data from the TANF df that after the entered rule year
-    mutate(RuleYearDiff = unique(data$ruleYear)-RuleYear)%>% #calculate the diff between the rule years in the TANF df and the entered rule year
-    filter(RuleYearDiff == min(RuleYearDiff))%>% #keep the most recent data 
-    select(-c(RuleYearDiff))
-  tanfData<-tanfData
-  
+  #Populate data pre 2025 with NA since there are not rules for those years 
   if(min(data$ruleYear)<2025){
-    data$value.tanf <- NA
+    data$value.tanf <- 0
   }
 
   if(min(data$ruleYear)==2025){
@@ -2747,7 +2739,7 @@ function.tanfBenefit<-function(data){
     
     # join w/ tanf Data 
     temp <- temp %>% 
-      left_join(tanfData, by=c("stateFIPS", "famsize","AKorHI","ownorrent","stateName")) %>% 
+      left_join(tanfData, by=c("stateFIPS", "famsize")) %>% 
       
       # Step I: Calculate net income - Subtract 50% of total gross earned income, and compare to Payment Standard; do this for both ongoing eligibility & determing benefit amount
       mutate(income=income+income.gift) %>% 
@@ -2833,7 +2825,7 @@ function.tanfBenefit<-function(data){
     
     # join w/ tanf Data 
     temp <- temp %>% 
-      left_join(tanfData, by=c("stateFIPS", "famsize","AKorHI","stateName","ownorrent"))
+      left_join(tanfData, by=c("stateFIPS", "famsize"))
     
     
    
@@ -4235,7 +4227,7 @@ function.tanfBenefit<-function(data){
    
     
     temp <- temp %>% 
-      left_join(tanfData, by=c("stateFIPS", "famsize","stateName","ownorrent","AKorHI")) %>% # join data w/ tanf Data%>% 
+      left_join(tanfData, by=c("stateFIPS", "famsize")) %>% # join data w/ tanf Data%>% 
       
       # Step I: Calculate net income - If the person has a "subsidized" job, only disregard $90. 
       # If it is an "unsubsidized" job, deduct $350 plus 25% of the remaining income. Compare this to the StandardofNeed. 
