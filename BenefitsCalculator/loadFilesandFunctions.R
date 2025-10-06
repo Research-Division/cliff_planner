@@ -7,8 +7,10 @@
 # Load all necessary supplementary files
 load("BenefitsCalculator/Database/tables_tools.rdata")
 load("BenefitsCalculator/Database/parameters.defaults.rdata")
-load("BenefitsCalculator/Database/expenses_tools.rdata")
-load("BenefitsCalculator/Database/benefit.parameters_tools.rdata")
+#load("BenefitsCalculator/Database/expenses_tools.rdata")
+#load("BenefitsCalculator/Database/benefit.parameters_tools.rdata")
+load("BenefitsCalculator/Database/expenses_tools_part.rdata")
+load("BenefitsCalculator/Database/benefit.parameters_tools_part.rdata")
 
 # Load all necessry functions
 compiler::loadcmp("BenefitsCalculator/functions/TANF.Rc") # TANF

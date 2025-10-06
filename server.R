@@ -181,6 +181,9 @@ shinyServer(function(input, output, session) {
                          #server = TRUE,
                          selected = character(0)
     )
+    # load state-specific parquet data
+    if (state == "empty") state <- "DC"
+    loadParquetFiles(state) 
   })
 
 
@@ -229,11 +232,11 @@ shinyServer(function(input, output, session) {
     filterMedian1<-isolate(input$filterMedian1) 
     
     
-    if(filterMedian1==TRUE){occ_types<-c(1)} else{occ_types<-unique(occ_area$occ_type)}
+    if(filterMedian1==TRUE){occ_types<-c(1)} else{occ_types<-unique(occ_area$occsoc_type)}
 
     # Update current occupation
     updateSelectizeInput(session, 'occupation1',
-                         choices = sort(selected_occ1[occ_type %in% occ_types, occsoc_name]),
+                         choices = sort(selected_occ1[occsoc_type %in% occ_types, occsoc_name]),
                          #server = TRUE,
                          selected = character(0))
   })
@@ -257,11 +260,11 @@ shinyServer(function(input, output, session) {
     
     # Filter on occupation type
     filterMedian2<-isolate(input$filterMedian2)
-    if(filterMedian2==TRUE){occ_types<-c(1)} else{occ_types<-unique(occ_area$occ_type)}
+    if(filterMedian2==TRUE){occ_types<-c(1)} else{occ_types<-unique(occ_area$occsoc_type)}
 
     # Update current occupation
     updateSelectizeInput(session, 'occupation2',
-                         choices = sort(selected_occ2[occ_type %in% occ_types, occsoc_name]),
+                         choices = sort(selected_occ2[occsoc_type %in% occ_types, occsoc_name]),
                          #server = TRUE,
                          selected = character(0))
   })

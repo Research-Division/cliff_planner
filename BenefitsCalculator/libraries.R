@@ -44,6 +44,7 @@ if (!"ggiraph" %in% rownames(installed.packages())){install.packages("ggiraph")}
 #note: this library needs to be downloaded from github
 #devtools::install_github("UrbanInstitute/urbnmapr", force = TRUE)
 if (!"rstudioapi" %in% rownames(installed.packages())){install.packages("rstudioapi")}
+if (!"arrow" %in% rownames(installed.packages())){install.packages("arrow")}
 
 library(shiny)
 library(shinythemes)
@@ -81,6 +82,7 @@ library(yaml)
 library(rstudioapi)
 library(pivottabler)
 library(ggiraph)
+library(arrow)
 
 # !!! IMPORTANT !!!
 # Load dplyr and plyr in the right order (to avoid functions override)
