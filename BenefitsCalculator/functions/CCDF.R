@@ -2037,8 +2037,7 @@ function.CCDFcopay<-function(data
   # No fee after certain number of children (under construction)
   if(22 %in% unique(data$stateFIPS)){ # make sure that state is in the list
     
-    test_data<<-data
-    data<-test_data
+    
     ccdfData_LA$stateFIPS <- 22
    
     
@@ -2640,8 +2639,7 @@ function.CCDFcopay<-function(data
   # MISSISSIPPI
   
   if(28 %in% unique(data$stateFIPS)){ # make sure that state is in the list
-    test_data<<-data
-    data<-test_data
+   
     ccdfData_MS$stateFIPS <- 28
     
     temp<-data[data$stateFIPS==28,]
@@ -2681,6 +2679,9 @@ function.CCDFcopay<-function(data
     # Step 1: Assign copays
     #----------------------------------
     temp<-left_join(temp, ccdfData_MS, by=c("ruleYear", "stateFIPS", "AKorHI", "famsize"))
+    
+    # test<<-temp
+    # temp<-test
     
     # Adjust for the income disregard
     temp$income<-temp$income-12*temp$IncomeDisregard
@@ -2764,6 +2765,10 @@ function.CCDFcopay<-function(data
     temp$FTcopay[temp$income>temp$Bin74Max & temp$income<=temp$Bin75Max]<-temp$CopayBin75[temp$income>temp$Bin74Max & temp$income<=temp$Bin75Max]
     temp$FTcopay[temp$income>temp$Bin75Max & temp$income<=temp$Bin76Max]<-temp$CopayBin76[temp$income>temp$Bin75Max & temp$income<=temp$Bin76Max]
     temp$FTcopay[temp$income>temp$Bin76Max & temp$income<=temp$Bin77Max]<-temp$CopayBin77[temp$income>temp$Bin76Max & temp$income<=temp$Bin77Max]
+    temp$FTcopay[temp$income>temp$Bin77Max & temp$income<=temp$Bin78Max]<-temp$CopayBin78[temp$income>temp$Bin77Max & temp$income<=temp$Bin78Max]
+    temp$FTcopay[temp$income>temp$Bin79Max & temp$income<=temp$Bin79Max]<-temp$CopayBin79[temp$income>temp$Bin78Max & temp$income<=temp$Bin78Max]
+    temp$FTcopay[temp$income>temp$Bin80Max & temp$income<=temp$Bin79Max]<-temp$CopayBin80[temp$income>temp$Bin79Max & temp$income<=temp$Bin79Max]
+    temp$FTcopay[temp$income>temp$Bin81Max & temp$income<=temp$Bin80Max]<-temp$CopayBin81[temp$income>temp$Bin80Max & temp$income<=temp$Bin80Max]
     
     # Apply asset test
     subset<-temp$totalassets > temp$AssetTest
@@ -4437,7 +4442,7 @@ function.CCDFcopay<-function(data
     
     # Adjust for the income disregard
     temp$income<-temp$income-12*temp$IncomeDisregard
-    test<<-temp
+   
     temp$FTcopay<-NA
     
     temp$FTcopay[temp$income>=0 & temp$income<=temp$Bin1Max]<-temp$CopayBin1[temp$income>=0 & temp$income<=temp$Bin1Max]
@@ -5710,8 +5715,7 @@ function.CCDFcopay<-function(data
     #----------------------------------
     # Step 1: Assign copays
     #----------------------------------
-    test<<-temp
-    temp<-test
+    
     temp<-left_join(temp, ccdfData_VA, by=c("ruleYear", "stateFIPS", "AKorHI", "famsize", "countyortownName"))
  
     # Adjust for the income disregard
