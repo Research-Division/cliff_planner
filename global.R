@@ -30,14 +30,16 @@ options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.siz
 # LOAD GLOBAL DATA
 ####################################
 # Call all the functions
-source("BenefitsCalculator/loadFilesandFunctions.R", local=TRUE) # Load auxiliary files and required functions
 source("BenefitsCalculator/libraries.R", local=TRUE) # Load required packages
+source("BenefitsCalculator/loadFilesandFunctions.R", local=TRUE) # Load auxiliary files and required functions
 
-
-data_wage_parameters <- readRDS("BenefitsCalculator/Database/data_parameters_2025.rds")
-#area_county_town <- fread('BenefitsCalculator/Database/cw_area_county_town_2025.csv', colClasses = "character")
 cw_state_minwage <- fread('BenefitsCalculator/Database/cw_state_year_min_wage_2025.csv')
-occ_area <- fread('BenefitsCalculator/Database/area_occupations_list_2025.csv', colClasses = "character")
+
+#data_wage_parameters <- readRDS("BenefitsCalculator/Database/data_parameters_2025.rds")
+#area_county_town <- fread('BenefitsCalculator/Database/cw_area_county_town_2025.csv', colClasses = "character")
+#occ_area <- fread('BenefitsCalculator/Database/area_occupations_list_2025.csv', colClasses = "character")
+#ds <- open_dataset("BenefitsCalculator/Database/Parquet/area_occupations_list_2025.parquet")
+#occ_area <<- ds %>% filter(state=="AL") %>% collect()
 
 ####################################
 #GLOBAL SETTINGS
@@ -252,7 +254,7 @@ line_colors <- c("#661100", "#E69F00")
 line_colors2 <- c("#E69F00","#661100")
 # Global parameters for lifetime projections
 # Lifetime horizon is fixed
-current_year <- as.numeric(format(Sys.Date(), "%Y"))
+current_year <- 2025  #as.numeric(format(Sys.Date(), "%Y"))
 #years<-seq(current_year,current_year+25, by=1)
 years<-seq(current_year,2100, by=1)
 
@@ -274,7 +276,34 @@ preK_ftorpt <- "PT"
 # Required Functions
 #################################################################################
 
-#-----------------------------------------------------------------------
+# Function to load Parquet data
+loadParquetFiles <- function(stateabb) {
+  statefips <- table.statemap$stateFIPS[table.statemap$stateAbbrev == stateabb]
+ 
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/exp.childcareData.ALICE.parquet")
+  exp.childcareData.ALICE <<- ds %>% filter(stateFIPS==statefips) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/exp.foodData.USDA.parquet")
+  exp.foodData.USDA  <<- ds %>% filter(stateFIPS==statefips) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/exp.healthcareData.ALICE.parquet")
+  exp.healthcareData.ALICE <<- ds %>% filter(stateFIPS==statefips) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/exp.housingData.parquet")
+  exp.housingData <<- ds %>% filter(stateFIPS==statefips) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/exp.transportationData.ALICE.parquet")
+  exp.transportationData.ALICE <<- ds %>% filter(stateFIPS==statefips) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/section8Data.parquet")
+  section8Data <<- ds %>% filter(stateFIPS==statefips) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/wage_projection_parameters_2025.parquet")
+  data_wage_parameters <<- ds %>% filter(state==stateabb) %>% collect()
+  
+  ds <- open_dataset("BenefitsCalculator/Database/Parquet/area_occupations_list_2025.parquet")
+  occ_area <<- ds %>% filter(state==stateabb) %>% collect()
+}
 
 net.res.life.values <- function(data1, data2, inputs){
   
